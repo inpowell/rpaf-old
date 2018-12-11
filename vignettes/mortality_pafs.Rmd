@@ -1,0 +1,213 @@
+---
+title: "PAFs for Mortality"
+author: "Ian Powell"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{PAFs for Mortality}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+The population attributable fraction (PAF) is a measure of the importance of some risk factor to the health of a population. The relative risk and odds ratio are other commonly used measures, however they only account for the strength of the association between exposure and disease. The PAF, on the other hand, is an integrated measure which accounts for both strength of association and prevalence of the risk factor in the population.
+
+This package is a tool used to calculate PAFs (and some other statistics) from cohort study data under an assumption of piecewise constant hazards.
+
+## Example data
+
+The example data we use in this vignette is from the Mini-Finland Health Survey. One can find out more about this survey using `?minifhs` once the `rpaf` package is loaded. The first few entries are shown below:
+
+```{r}
+library(rpaf)
+knitr::kable(head(minifhs), digits = 3)
+```
+
+## Mortality PAFs
+
+Suppose we want to measure the association between smoking and death using our `minifhs` data. First, we need to initialise our data to a form that's useful to `rpaf`. This is done using the `mpafreg` command.
+
+`mpafreg` requires a column in our dataframe that is uniquely associated with each person -- here, we have used the `ID` column. The censoring outcome of interest is death, which are encoded in the columns `DEATH` (which is true if an individual died during follow-up), and `DEATH_FT` (which indicates the time follow-up finished; either at death or at the end of follow up, which a quick perusal of `minifhs` suggests is shortly before the 17-year mark). Next, we need to account for age, which we do using birth cohorts of 20 years (stored in `B_COHORT`, which is a factor column). Finally, our covariate model includes the other variables of interest, which might be non-modifiable (as in the case of `SEX`) or modifiable (as in the case of smoking status `SMOKE`).
+
+There are also two times the function requires -- the total time of follow-up, and the length of time periods. (Recall our model is based on an assumption of piecewise constant hazards, and we need to specify how long each hazard is constant for.) These are respectively 17 and 5 years, which are passed as `ft_length` and `ft_delta`.
+
+Finally, `mpafreg` will return a data frame with three new columns. These (prepended with `period_`) are mostly used internally, but it may help diagnostics to have named them manually.
+
+```{r}
+smoke.mpaf <- mpafreg(
+  rawdata = minifhs,
+  id_var = "ID",
+  censor_var = "DEATH",
+  censor_time = "DEATH_FT",
+  cohort_var = "B_COHORT",
+  covariate_model = "SEX + SMOKE",
+  ft_length = 17,
+  ft_delta = 5,
+  period_var = "time_period",
+  period_time_var = "p_time",
+  period_censor_var = "p_died"
+)
+```
+
+This function also performs a survival regression which we can view along with some other information.
+
+```{r}
+smoke.mpaf
+```
+
+At the bottom of this output, we can see that 5 of the 4517 individuals were missing data that we are interested in for this model. It is possible to see more detail by accessing the `na.action` list item, which tells us which rows of `minifhs` that were omitted.
+
+```{r}
+smoke.mpaf$na.action
+```
+
+Indeed, there are other objects in the `mpafreg` object which might be considered useful for diagnostic purposes. One can view them using `str(smoke.mpaf)`.
+
+### Hazard ratios
+
+The quickest and simplest output to view from our object is the hazard ratio. Under some (apparently very restrictive, but I haven't done the maths myself yet) conditions, that hazard ratio is exactly identical to the relative risk. Once can view the hazard ratios using `predict` (which has been specialised to our objects of class `mpafreg`):
+
+```{r}
+predict(smoke.mpaf, type = 'hr')
+```
+
+Indeed, with this package, it is also very simple to calculate asymptotic confidence intervals for hazard ratios:
+
+```{r}
+predict(smoke.mpaf, type = 'hr', confint = TRUE)
+```
+
+For the truly determined, one can also view standard errors and variance-covariance matrices of the log-hazard ratios using the corresponding flags in `predict`; however these are variances of the log-transformed hazard ratios, which are assumed to be normal.
+
+```{r}
+# we don't want to print all the numbers, but the structure should do
+str(predict(smoke.mpaf, type = 'hr', se.trans = TRUE, vcov.trans = TRUE))
+```
+
+One can see other uses of the `predict` function in this context by typing `?predict.mpafreg`.
+
+### PAFs
+
+Those eager few who have already viewed the help page for `predict.mpafreg` will have seen that `predict` can calculate multiple types of statistic, including PAFs. Let's try that!
+
+```{r error=TRUE}
+predict(smoke.mpaf, type = 'paf')
+```
+
+Aha! We have stumbled upon an error. This is because PAFs are calculated by modifying risk factors in our data, which we haven't specified. So, if we want to modify smoking status and view the resulting PAFs, we can call `predict` with an extra argument:
+
+```{r}
+predict(smoke.mpaf, modlist = list(SMOKE = c("Never", "<30/day", ">=30/day")),
+        type = 'paf')
+```
+
+Here, the names indicate the time period in which the PAF is concerned.
+
+If we want to choose a different modification, we just change the `modlist` argument. For example, take the simple (but nonsensical) modification where everyone in the cohort becomes male:
+
+```{r}
+predict(smoke.mpaf, modlist = list(SEX = "Male"), type = 'paf')
+```
+
+To understand how to form a proper modlist argument, consult the help pages for `predict` or `apply_modifications`.
+
+Similarly to hazard ratios, it is simple to calculate the confidence intervals and transformed variance estimates for PAFs, though this takes a considerably longer time:
+
+```{r cache = TRUE}
+no_confint_start <- Sys.time()
+invisible(predict(smoke.mpaf, modlist = list(SMOKE = c("Never", "<30/day", ">=30/day")),
+                  type = 'paf'))
+confint_start <- no_confint_end <- Sys.time()
+predict(smoke.mpaf, modlist = list(SMOKE = c("Never", "<30/day", ">=30/day")),
+        type = 'paf', confint = TRUE)
+confint_end <- Sys.time()
+
+# without confidence intervals
+no_confint_end - no_confint_start
+
+# with confidence intervals
+confint_end - confint_start
+```
+
+### TL;DR -- Summaries
+
+Naturally, one might not want to run each line of this code. Luckily, we have overloaded R's `summary` function to overcome this problem. If a user would like a quick summary of their cohort study with respect to PAFs, they can view the summary with a single line (noting that we still need to supply the list of modifications to get more than hazard ratios):
+
+```{r}
+(smoke.summ <- summary(smoke.mpaf, modlist = 
+                         list(SMOKE = c("Never", "<30/day", ">=30/day"))))
+```
+
+When displaying summary output, this package picks and chooses (what the creator feels are) quantities of interest. But never fear! There is plenty more where that came from for all those diagnostics aficionados. One can see what output is available using `str(smoke.summ)`.
+
+### Everything on the table -- comprehensive summaries
+
+One may have noted that the summary output above doesn't offer confidence intervals, which we have already demonstrated are available. If one wants to view confidence intervals for everything in the summary, they would call `summary` with the `comprehensive = TRUE` argument.
+
+And then they would wait.
+
+And then everything would be on the table.
+
+```{r cache = TRUE}
+( smoke.csumm <- summary(smoke.mpaf, modlist = 
+                           list(SMOKE = c("Never", "<30/day", ">=30/day")),
+                         comprehensive = TRUE) )
+```
+
+## The `newdata` argument
+
+As per well-established R practice, one can make predictions from, say, a linear model object by specifying the `newdata` argument in `predict`. Such is also the case in `rpaf`, but one needs to be careful to ensure the new data is of the right type. For this end, we expose the `make_data.mpafreg` function, which hasn't yet been thoroughly tested.
+
+Really, nothing in this package has been thoroughly tested. I'm still finding bugs.
+
+## Grouping
+
+One of the powerful features of the summary command for `mpafreg`s is its willingness to split the data it's given, and estimate significance of differences between groups in the cohort. For example, let us examine the effect of BMI on mortality in subgroups defined by blood pressure.
+
+```{r cache = TRUE}
+bmi_bp.mpafreg <- mpafreg(
+  minifhs, "ID", "DEATH", "DEATH_FT", "B_COHORT", "SEX + BP + BMI_2:BP",
+  17, 5, "f_period")
+
+(bmi_bp.summ <- summary(bmi_bp.mpafreg, modlist = list(BMI_2 = "<25.0"), group = "BP", 
+                        comprehensive = TRUE, level = 0.99))
+```
+
+Here, from the last section of this summary, we can see that the difference between PAFs is not significantly different from zero. That is, blood pressure class does not seem to have an effect on the PAF for mortality when BMI is modified. While only the time interval (0, 17] is shown, this is actually calculated for all time intervals:
+
+```{r results='asis'}
+invisible(lapply(seq_along(bmi_bp.summ$group_comparison), FUN = function(i, x) {
+  tbl <- x[[i]]
+  cpt <- names(x)[i]
+  
+  print(knitr::kable(tbl, digits = 3, caption = cpt))
+}, x = bmi_bp.summ$group_comparison))
+```
+
+## Other examples
+
+### Modifying BMI
+
+Suppose we want analysis that ignores smoking, and just has sex and BMI category as covariates. Then, we would use:
+
+```{r cache = TRUE}
+bmi.mpafreg <- mpafreg(minifhs, "ID", "DEATH", "DEATH_FT", "B_COHORT", 
+                       "SEX + BMI_2", 17, 5, "period")
+summary(bmi.mpafreg, list(BMI_2 = "<25.0"), comprehensive = TRUE)
+```
+
+### Modifying blood pressure
+
+Now suppose we want analysis that just has sex and blood pressure category as covariates.
+
+```{r cache = TRUE}
+bp.mpafreg <- mpafreg(minifhs, "ID", "DEATH", "DEATH_FT", "B_COHORT",
+                      "SEX + BP", 17, 5, "period")
+summary(bp.mpafreg, list(BP = "Normal"), comprehensive = TRUE)
+```
