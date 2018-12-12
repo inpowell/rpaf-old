@@ -47,7 +47,6 @@
 #'
 #' @export
 #'
-#' @examples
 dpaf_data <- function(rawdata, variables, time_breaks, id_var,
                       death_time, death_ind,
                       disease_time, disease_ind,
@@ -150,7 +149,7 @@ dpaf_data <- function(rawdata, variables, time_breaks, id_var,
   retlist
 }
 
-#' Fit PAFs for disease data
+#' Fit survival regressions for disease PAF calculations
 #'
 #' @param disease_resp formula with response for disease regression (note RHS
 #'   should be \code{.})
@@ -158,57 +157,179 @@ dpaf_data <- function(rawdata, variables, time_breaks, id_var,
 #'   should be \code{.})
 #' @param predictors formula with RHS containing predictors for both survival
 #'   regressions (LHS should be empty)
-#' @param modlist list of modifications for PAF calculation (see
-#'   \code{\link{apply_modifications}} and \code{\link{mpafreg}} for more
-#'   information)
-#' @param data_list a list containing data frames and other information, from
-#'   \code{\link{dpaf_data}}
-#' @param ft_length length of follow-up time
-#' @param ft_delta length of periods of constant hazard
-#' @param id_var name of column containing individual ID, as for
-#'   \code{\link{dpaf_data}}
-#' @param period_var name of column containing period factor, as for
+#' @param dpaf_data an object of class \code{dpaf_response}, from
 #'   \code{\link{dpaf_data}}
 #' @param ... other arguments to be passed to \code{\link[survival]{survreg}}.
 #'
-#' @return
+#' @return an object of class \code{dpaf}
 #' @export
 #'
-#' @examples
-dpaf <- function(disease_resp, death_resp, predictors,
-                 modlist, data_list, ft_length, ft_delta,
-                 id_var, period_var, ...) {
+dpaf <- function(disease_resp, death_resp, predictors, dpaf_data, ...) {
+  model <- dpaf_data
+
+  formula_d <- update(predictors, disease_resp)
+  formula_m <- update(predictors, death_resp)
+
+  model$survreg_d <- survival::survreg(formula_d, model$data,
+                                       dist = "exponential", ...)
+  model$survreg_m <- survival::survreg(formula_m, model$data,
+                                       dist = "exponential", ...)
+
+  model$coefficients <- do.call(cbind, list(
+    disease = model$survreg_d$coefficients,
+    mortality = model$survreg_m$coefficients
+  ))
+
+  model$var <- list(
+    disease = model$survreg_d$var,
+    mortality = model$survreg_m$var
+  )
+
+  class(model) <- "dpaf"
+  model
 }
 
-#' Calculate gradients of morbidity for PAF calculations
+#' Calculate hazards for dpaf study
 #'
-#' @param x
-#' @param hz_d
-#' @param hz_m
-#' @param sv_d
-#' @param sv_m
-#' @param breaks
-#' @param ID
-#' @param PERIOD
+#' @param z model matrix
+#' @param cf named matrix of coefficients, as in \code{\link{dpaf}}
 #'
-#' @return
-#' @export
+#' @return named matrix of hazards
 #' @keywords internal
-dpaf_grad <- function(x, hz_d, hz_m, sv_d, sv_m, breaks, ID, PERIOD) {
+dpaf_hz <- function(z, cf) {
+  exp(z %*% -cf)
 }
 
-#' Title
+#' Calculate survivals for dpaf study
 #'
-#' @param object
-#' @param parm
-#' @param level
-#' @param ...
+#' @param hz named matrix of hazards
+#' @param ID vector of IDs
+#' @param PERIOD vector of periods
+#' @param dt delta-times -- length of each period
 #'
-#' @return
-#' @export
-#' @method confint dpaf
+#' @return named matrix of survivals
 #' @keywords internal
+dpaf_sv <- function(hz, ID, PERIOD, dt) {
+  if (any(tapply(PERIOD, ID, is.unsorted)))
+    stop("Periods must be in ascending order for each ID to calculate survival")
+
+  apply(hz, 2, function(hz_col)
+    exp(-ave(hz_col, ID, FUN = function(l) cumsum(dt * l)))
+  )
+}
+
+#' Calculate disease-free survival (**s**ur**v**ival **p**roducts)
 #'
-#' @examples
-confint.dpaf <- function(object, parm, level = 0.95, ...) {
+#' @param sv named matrix of survivals
+#'
+#' @return vector of disease-free survivals
+#' @keywords internal
+dpaf_svp <- function(sv) {
+  apply(sv, 1, prod)
+}
+
+#' Calculate healthy mortality \eqn{I}
+#'
+#' @param hz **named** matrix of hazards (must have a column named "disease")
+#' @param svp vector of disease-free survivals
+#' @param ID vector of IDs
+#' @param PERIOD factor vector of PERIODs
+#'
+#' @return (numeric, scalar) healthy mortality, perhaps to some constant factor
+#' @keywords internal
+dpaf_i <- function(hz, svp, ID, PERIOD) {
+  if (any(tapply(PERIOD, ID, is.unsorted)))
+    stop("Periods must be in ascending order for each ID to calculate I")
+
+  svd <- ave(svp, ID, FUN = function(s) -diff(c(1, s)))
+  ## (survival at time 0 is 1)
+
+  sum(hz[,"disease"] / rowSums(hz) * svd)
+}
+
+#' Calculate gradient of hazard in disease PAF studies
+#'
+#' @param z model matrix
+#' @param hz named matrix of hazards
+#'
+#' @return a named list of matrices containing hazard gradients
+#' @keywords internal
+dpaf_ghz <- function(z, hz) {
+  lapply(split(hz, col(hz, as.factor = TRUE)), `*`, z)
+}
+
+#' Calculate gradient of survival in disease PAF studies
+#'
+#' @param ghz a named list of hazard gradients
+#' @inheritParams dpaf_sv
+#'
+#' @return a named list of matrices containing survival gradients
+#' @keywords internal
+dpaf_gsv <- function(ghz, sv, ID, PERIOD, dt) {
+  if (any(tapply(PERIOD, ID, is.unsorted)))
+    stop("Periods must be in ascending order for each ID")
+
+  sv <- split(sv, col(sv, as.factor = TRUE))
+  mapply(
+    function(ghz_x, sv_x) apply(
+      ghz_x, 2, function(col) ave(
+        col, ID, FUN = function(ghz_ij) cumsum(ghz_ij * dt)
+      )
+    ),
+    ghz, sv, SIMPLIFY = FALSE
+  )
+}
+
+#' Calculate gradient of healthy mortality \eqn{I}
+#'
+#' @param ghz a named list of hazard gradients
+#' @param gsv a named list of survival gradients
+#' @param sv a named matrix of survivals
+#' @inheritParams dpaf_i
+#'
+#' @return a named list of vectors for \eqn{\grad{I}} for each of disease and
+#'   mortality
+#' @keywords internal
+dpaf_gi <- function(ghz, gsv, hz, sv, ID, PERIOD) {
+  if (any(tapply(PERIOD, ID, is.unsorted)))
+    stop("Periods must be in ascending order for each ID")
+
+  svd <- ave(apply(sv, 1, prod), ID, FUN = function(s) -diff(c(1, s)))
+  gsvd_d <- apply(
+    apply(sv, 1, prod) * gsv$disease, 2,
+    function(gsvp_col) ave(gsvp_col, ID, FUN = function(s) -diff(c(0,s)))
+  )
+  gsvd_m <- apply(
+    apply(sv, 1, prod) * gsv$mortality, 2,
+    function(gsvp_col) ave(gsvp_col, ID, FUN = function(s) -diff(c(0,s)))
+  )
+
+  smnd_d <- hz[,"mortality"] / rowSums(hz)**2 * svd * ghz$disease +
+    hz[,"mortality"] / rowSums(hz) * gsvd_d
+  smnd_m <- -hz[,"disease"] / rowSums(hz)**2 * svd * ghz$mortality +
+    hz[,"mortality"] / rowSums(hz) * gsvd_m
+
+  lapply(
+    list(disease = smnd_d, mortality = smnd_m),
+    function(smnd) apply(smnd, 2, sum)
+  )
+}
+
+#' Calculate gradients of \eqn{\log(1-PAF)} wrt disease and mortality
+#' coefficients
+#'
+#' @param gi_mod named list of gradients of \eqn{I^*}
+#' @param i_mod \eqn{I^*}
+#' @param gi_raw named list of gradients of \eqn{I}
+#' @param i_raw \eqn{I}
+#'
+#' @return a named list of gradient vectors of the iPAF
+#' @keywords internal
+dpaf_gipaf <- function(gi_mod, i_mod, gi_raw, i_raw) {
+  mapply(
+    `-`,
+    lapply(gi_mod, `/`, i_mod),
+    lapply(gi_raw, `/`, i_raw),
+    SIMPLIFY = FALSE
+  )
 }

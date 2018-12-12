@@ -180,5 +180,84 @@ predict.mpafreg <- function(object, modlist, newdata,
   }
 }
 
+#' Predicting PAFs and other quantities in disease-death cohort studies
+#'
+#'
+#'
+#' \code{modlist} should be a named list of scalars or vectors. Each name should
+#' correspond to a column in the object's data frame. The first element in each
+#' vector should be the desired output value. If there are subsequent elements
+#' in the vector, these identify which values to convert from.
+#'
+#' @param object an object of class \code{\link{dpaf}}
+#' @param modlist an named list of replacement vectors (see Details)
+#' @param newdata an object of class \code{\link{dpaf_data}}
+#' @param type the quantity to be estimated
+#' @param confint if \code{TRUE}, calculate confidence intervals
+#' @param level confidence level for interval calculations, default 0.95
+#' @param se.trans if \code{TRUE}, calculate standard errors in the space
+#'   assumed to be normal
+#' @param vcov.trans if \code{TRUE}, calculate the variance-covariance matrix in
+#'   the space assumed to be normal
+#' @param ... other arguments
+#'
+#' @return
+#' @export
+predict.dpaf <- function(object, modlist, newdata,
+                         type = c('lp', 'hz'),
+                         confint = FALSE, level = 0.95,
+                         se.trans = FALSE, vcov.trans = FALSE,
+                         ...) {
+  type <- match.arg(type)
 
+  cf <- object$coefficients
+  vv_l <- object$var
+
+  Terms <- object$survreg_d$terms
+  if (!inherits(Terms, "terms"))
+    # I don't know why this is needed -- it's from survival:::predict.survreg
+    stop("invalid terms component of survreg in object")
+  Terms <- stats::delete.response(Terms)
+
+  if (missing(newdata))
+    dpdta <- object
+  else
+    dpdta <- newdata
+
+  mod_df <- apply_modifications(dpdta$data, modlist)
+  raw_frame <- stats::model.frame(Terms, data = dpdta$data,
+                                  na.action = na.pass,
+                                  xlev = object$survreg_d$xlevels)
+  mod_frame <- stats::model.frame(Terms, data = mod_df,
+                                  na.action = na.pass,
+                                  xlev = object$survreg_d$xlevels)
+
+  z_raw <- stats::model.matrix(Terms, raw_frame)
+  z_mod <- stats::model.matrix(Terms, mod_frame)
+
+  hz_raw <- dpaf_hz(z_raw, cf)
+  sv_raw <- dpaf_sv(hz_raw, dpdta$ID, dpdta$PERIOD, diff(dpdta$breaks))
+  svp_raw <- dpaf_svp(sv_raw)
+  i_raw <- dpaf_i(hz_raw, svp_raw, dpdta$ID, dpdta$PERIOD)
+
+  hz_mod <- dpaf_hz(z_mod, cf)
+  sv_mod <- dpaf_sv(hz_mod, dpdta$ID, dpdta$PERIOD, diff(dpdta$breaks))
+  svp_mod <- dpaf_svp(sv_mod)
+  i_mod <- dpaf_i(hz_mod, svp_mod, dpdta$ID, dpdta$PERIOD)
+
+  ghz_raw <- dpaf_ghz(z_raw, hz_raw)
+  gsv_raw <- dpaf_gsv(ghz_raw, sv_raw, dpdta$ID, dpdta$PERIOD, diff(dpdta$breaks))
+  gi_raw <- dpaf_gi(ghz_raw, gsv_raw, hz_raw, sv_raw, dpdta$ID, dpdta$PERIOD)
+
+  ghz_mod <- dpaf_ghz(z_mod, hz_mod)
+  gsv_mod <- dpaf_gsv(ghz_mod, sv_mod, dpdta$ID, dpdta$PERIOD, diff(dpdta$breaks))
+  gi_mod <- dpaf_gi(ghz_mod, gsv_mod, hz_mod, sv_mod, dpdta$ID, dpdta$PERIOD)
+
+  gipaf <- dpaf_gipaf(gi_mod, i_mod, gi_raw, i_raw)
+
+  v_ipaf <- mapply(function(grad, vv) t(grad) %*% vv %*% grad,
+                   gipaf, vv_l)
+
+  c(1 - i_mod / i_raw, v_ipaf)
+}
 
