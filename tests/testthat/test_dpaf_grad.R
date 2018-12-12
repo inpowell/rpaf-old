@@ -5,28 +5,31 @@ library(rpaf)
 
 
 # Example data (from whiteboard work) -------------------------------------
-z <- matrix(scan(text ="
-1 0 0
-0 1 0
-1 0 0
-0 1 0
-1 0 1
-0 1 1
-1 0 1
-0 1 1", quiet = TRUE), ncol = 3, byrow = TRUE)
-ID <- gl(4, 2)
-PERIOD <- gl(2, 1, 8)
-breaks = 0:2
-hz_d <- c(1,2,1,2,4,5,4,5)
-hz_m <- c(2,3,2,3,6,7,6,7)
-sv_d <- exp(-hz_d)
-sv_m <- exp(-hz_m)
-
 
 # Tests -------------------------------------------------------------------
 
 test_that("Morbidity gradients", {
-  grad <- dpaf_grad(z, hz_d, hz_m, sv_d, sv_m, breaks, ID, PERIOD)
+  z <- matrix(scan(text ="
+    1 0 0
+    0 1 0
+    1 0 0
+    0 1 0
+    1 0 1
+    0 1 1
+    1 0 1
+    0 1 1", quiet = TRUE), ncol = 3, byrow = TRUE)
+  ID <- gl(4, 2)
+  PERIOD <- gl(2, 1, 8)
+  breaks = 0:2
+  hz_d <- c(1,2,1,2,4,5,4,5)
+  hz_m <- c(2,3,2,3,6,7,6,7)
+  hz <- cbind(disease = hz_d, mortality = hz_m)
+
+  sv_d <- exp(-hz_d)
+  sv_m <- exp(-hz_m)
+  sv <- cbind(disease = sv_d, mortality = sv_m)
+
+  # grad <- dpaf_grad(z, hz_d, hz_m, sv_d, sv_m, breaks, ID, PERIOD)
 
   # expected values
   eghz_d <- matrix(c(1,0,0, 0,2,0, 1,0,0, 0,2,0, 4,0,4, 0,5,5, 4,0,4, 0,5,5),
@@ -42,10 +45,9 @@ test_that("Morbidity gradients", {
   egsv_d <- -exp(-hz_d) * ecs_ghz_d
   egsv_m <- -exp(-hz_m) * ecs_ghz_m
 
-  expect_equal(grad$hazard.disease, eghz_d)
-  expect_equal(grad$hazard.mortality, eghz_m)
-  expect_equal(grad$survival.disease, egsv_d)
-  expect_equal(grad$survival.mortality, egsv_m)
+  ghz <- rpaf:::dpaf_ghz(z, hz)
+  expect_equal(ghz, list(disease = eghz_d, mortality = eghz_m))
 
-  # remains to test final grad-morbidity
+  gsv <- rpaf:::dpaf_gsv(ghz, sv, ID, PERIOD, diff(breaks))
+  expect_equal(gsv, list(disease = egsv_d, mortality = egsv_m))
 })
