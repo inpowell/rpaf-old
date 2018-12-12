@@ -271,7 +271,7 @@ dpaf_gsv <- function(ghz, sv, ID, PERIOD, dt) {
 
   sv <- split(sv, col(sv, as.factor = TRUE))
   mapply(
-    function(ghz_x, sv_x) apply(
+    function(ghz_x, sv_x) -sv_x * apply(
       ghz_x, 2, function(col) ave(
         col, ID, FUN = function(ghz_ij) cumsum(ghz_ij * dt)
       )
