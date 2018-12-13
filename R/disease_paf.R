@@ -214,7 +214,7 @@ dpaf_sv <- function(hz, ID, PERIOD, dt) {
     stop("Periods must be in ascending order for each ID to calculate survival")
 
   apply(hz, 2, function(hz_col)
-    exp(-ave(hz_col, ID, FUN = function(l) cumsum(dt * l)))
+    exp(-stats::ave(hz_col, ID, FUN = function(l) cumsum(dt * l)))
   )
 }
 
@@ -241,7 +241,7 @@ dpaf_i <- function(hz, svp, ID, PERIOD) {
   if (any(tapply(PERIOD, ID, is.unsorted)))
     stop("Periods must be in ascending order for each ID to calculate I")
 
-  svd <- ave(svp, ID, FUN = function(s) -diff(c(1, s)))
+  svd <- stats::ave(svp, ID, FUN = function(s) -diff(c(1, s)))
   ## (survival at time 0 is 1)
 
   sum(hz[,"disease"] / rowSums(hz) * svd)
@@ -272,7 +272,7 @@ dpaf_gsv <- function(ghz, sv, ID, PERIOD, dt) {
   sv <- split(sv, col(sv, as.factor = TRUE))
   mapply(
     function(ghz_x, sv_x) -sv_x * apply(
-      ghz_x, 2, function(col) ave(
+      ghz_x, 2, function(col) stats::ave(
         col, ID, FUN = function(ghz_ij) cumsum(ghz_ij * dt)
       )
     ),
@@ -294,20 +294,22 @@ dpaf_gi <- function(ghz, gsv, hz, sv, ID, PERIOD) {
   if (any(tapply(PERIOD, ID, is.unsorted)))
     stop("Periods must be in ascending order for each ID")
 
-  svd <- ave(apply(sv, 1, prod), ID, FUN = function(s) -diff(c(1, s)))
+  svd <- stats::ave(apply(sv, 1, prod), ID, FUN = function(s) -diff(c(1, s)))
   gsvd_d <- apply(
     apply(sv, 1, prod) * gsv$disease, 2,
-    function(gsvp_col) ave(gsvp_col, ID, FUN = function(s) -diff(c(0,s)))
+    # sv[,"mortality"] * gsv$disease, 2,
+    function(gsvp_col) stats::ave(gsvp_col, ID, FUN = function(s) -diff(c(0,s)))
   )
   gsvd_m <- apply(
     apply(sv, 1, prod) * gsv$mortality, 2,
-    function(gsvp_col) ave(gsvp_col, ID, FUN = function(s) -diff(c(0,s)))
+    # sv[,"disease"] * gsv$mortality, 2,
+    function(gsvp_col) stats::ave(gsvp_col, ID, FUN = function(s) -diff(c(0,s)))
   )
 
   smnd_d <- hz[,"mortality"] / rowSums(hz)**2 * svd * ghz$disease +
-    hz[,"mortality"] / rowSums(hz) * gsvd_d
+    hz[,"disease"] / rowSums(hz) * gsvd_d
   smnd_m <- -hz[,"disease"] / rowSums(hz)**2 * svd * ghz$mortality +
-    hz[,"mortality"] / rowSums(hz) * gsvd_m
+    hz[,"disease"] / rowSums(hz) * gsvd_m
 
   lapply(
     list(disease = smnd_d, mortality = smnd_m),
@@ -330,6 +332,24 @@ dpaf_gipaf <- function(gi_mod, i_mod, gi_raw, i_raw) {
     `-`,
     lapply(gi_mod, `/`, i_mod),
     lapply(gi_raw, `/`, i_raw),
+    SIMPLIFY = FALSE
+  )
+}
+
+#' Calculate gradients of PAF wrt disease and mortality coefficients
+#'
+#' @param gi_mod named list of gradients of \eqn{I^*}
+#' @param i_mod \eqn{I^*}
+#' @param gi_raw named list of gradients of \eqn{I}
+#' @param i_raw \eqn{I}
+#'
+#' @return a named list of gradient vectors of the PAF
+#' @keywords internal
+dpaf_gpaf <- function(gi_mod, i_mod, gi_raw, i_raw) {
+  mapply(
+    function(gi_mod_x, gi_raw_x)
+      (gi_raw_x * i_mod - gi_mod_x * i_raw) / i_raw**2,
+    gi_mod, gi_raw,
     SIMPLIFY = FALSE
   )
 }

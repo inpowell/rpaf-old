@@ -35,8 +35,8 @@ test_that("Single-person", {
 
   # ss <- dpaf_fit(x, cf_d, cf_m, id, period, 0:3)
 
-  hz <- rpaf::dpaf_hz(x, cf)
-  sv <- rpaf::dpaf_sv(hz, id, period, c(1,1,1))
+  hz <- rpaf:::dpaf_hz(x, cf)
+  sv <- rpaf:::dpaf_sv(hz, id, period, c(1,1,1))
 
   expect_equal(hz, cbind(disease = c(0.5, 3, 3),
                          mortality = c(2, 5, 5)))
@@ -44,7 +44,7 @@ test_that("Single-person", {
                          mortality = c(exp(-2), exp(-7), exp(-12))))
 
   expect_equal(
-    rpaf:::dpaf_i(hz, rpaf::dpaf_svp(sv), id, period),
+    rpaf:::dpaf_i(hz, rpaf:::dpaf_svp(sv), id, period),
     0.5 / 2.5 * (1 - exp(-2.5)) +
       3 / 8 * (exp(-2.5) - exp(-10.5)) +
       3 / 8 * (exp(-10.5) - exp(-18.5))
@@ -62,8 +62,8 @@ test_that("Uneven period", {
 
   # ss <- dpaf_fit(x, cf_d, cf_m, id, period, 0:3)
 
-  hz <- rpaf::dpaf_hz(x, cf)
-  sv <- rpaf::dpaf_sv(hz, id, period, c(1,1,1/3))
+  hz <- rpaf:::dpaf_hz(x, cf)
+  sv <- rpaf:::dpaf_sv(hz, id, period, c(1,1,1/3))
 
   expect_equal(hz, cbind(disease = c(0.5, 3, 3),
                          mortality = c(2, 5, 5)))
