@@ -198,17 +198,25 @@ predict.mpafreg <- function(object, modlist, newdata,
 #' @param level confidence level for interval calculations, default 0.95
 #' @param se.trans if \code{TRUE}, calculate standard errors in the space
 #'   assumed to be normal
+#' @param gradient if \code{TRUE}, calculate the gradient of the PAF and return
+#'   as a list
 #' @param ... other arguments
 #'
-#' @return a named vector containing the prediction, its standard error in
+#' @return A named vector containing the prediction, its standard error in
 #'   normal space, and the confidence interval, when the latter two are
-#'   requested
+#'   requested.
+#'
+#'   If \code{gradient = TRUE}, then the return value will be a named list
+#'   containing the above vector (in \code{estimate}) and gradients with respect
+#'   to disease and mortality coefficients (in \code{disease} and
+#'   \code{mortality}, respectively)
+#'
 #' @export
 #' @method predict dpaf
 predict.dpaf <- function(object, modlist, newdata,
                          type = c('paf'),
                          confint = TRUE, level = 0.95,
-                         se.trans = TRUE,
+                         se.trans = TRUE, gradient = FALSE,
                          ...) {
   type <- match.arg(type)
 
@@ -274,6 +282,9 @@ predict.dpaf <- function(object, modlist, newdata,
     ci <- -expm1(ci) # convert to PAF space
     pred <- c(pred, ci)
   }
+
+  if (gradient)
+    pred <- c(list(pred), dpaf_gpaf(gi_mod, i_mod, gi_raw, i_raw))
 
   return(pred)
 }
