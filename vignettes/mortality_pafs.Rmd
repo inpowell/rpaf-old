@@ -120,19 +120,11 @@ To understand how to form a proper modlist argument, consult the help pages for 
 Similarly to hazard ratios, it is simple to calculate the confidence intervals and transformed variance estimates for PAFs, though this takes a considerably longer time:
 
 ```{r cache = TRUE}
-no_confint_start <- Sys.time()
-invisible(predict(smoke.mpaf, modlist = list(SMOKE = c("Never", "<30/day", ">=30/day")),
+system.time(predict(smoke.mpaf, modlist = list(SMOKE = c("Never", "<30/day", ">=30/day")),
                   type = 'paf'))
-confint_start <- no_confint_end <- Sys.time()
-predict(smoke.mpaf, modlist = list(SMOKE = c("Never", "<30/day", ">=30/day")),
-        type = 'paf', confint = TRUE)
-confint_end <- Sys.time()
 
-# without confidence intervals
-no_confint_end - no_confint_start
-
-# with confidence intervals
-confint_end - confint_start
+system.time(predict(smoke.mpaf, modlist = list(SMOKE = c("Never", "<30/day", ">=30/day")),
+        type = 'paf', confint = TRUE))
 ```
 
 ### TL;DR -- Summaries
