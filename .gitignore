@@ -1,6 +1,6 @@
 inst/doc
 .Rproj.user
-vignettes/.*_cache/
+vignettes/*_cache/
 .RData
 .Rhistory
 ..Rcheck
