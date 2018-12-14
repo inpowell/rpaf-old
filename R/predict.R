@@ -255,7 +255,7 @@ predict.dpaf <- function(object, modlist, newdata,
   svp_mod <- dpaf_svp(sv_mod)
   i_mod <- dpaf_i(hz_mod, svp_mod, dpdta$ID, dpdta$PERIOD)
 
-  if (confint || se.trans) {
+  if (confint || se.trans || gradient) {
     ghz_raw <- dpaf_ghz(z_raw, hz_raw)
     gsv_raw <- dpaf_gsv(ghz_raw, sv_raw, dpdta$ID, dpdta$PERIOD, diff(dpdta$breaks))
     gi_raw <- dpaf_gi(ghz_raw, gsv_raw, hz_raw, sv_raw, dpdta$ID, dpdta$PERIOD)
@@ -284,7 +284,7 @@ predict.dpaf <- function(object, modlist, newdata,
   }
 
   if (gradient)
-    pred <- c(list(pred), dpaf_gpaf(gi_mod, i_mod, gi_raw, i_raw))
+    pred <- c("estimate" = list(pred), dpaf_gpaf(gi_mod, i_mod, gi_raw, i_raw))
 
   return(pred)
 }

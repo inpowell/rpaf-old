@@ -1,3 +1,6 @@
+
+# Data preparation utilities ----------------------------------------------
+
 #' Prepare data for PAF disease studies
 #'
 #' @param rawdata a data frame containing
@@ -65,7 +68,7 @@ dpaf_data <- function(rawdata, variables, time_breaks, id_var,
     rawdata[[id_var]] <- 1:nrow(rawdata)
   }
 
-  # select columns ----------------------------------------------------------
+  # select columns
   if (missing(death_time) || missing(death_ind) ||
       missing(disease_time) || missing(disease_ind))
     data <- rawdata[,c(id_var, variables), drop = FALSE]
@@ -73,13 +76,12 @@ dpaf_data <- function(rawdata, variables, time_breaks, id_var,
     data <- rawdata[,c(id_var, variables, death_time, death_ind,
                        disease_time, disease_ind)]
 
-  # handle missing values ---------------------------------------------------
+  # handle missing values
   data <- match.fun(na.action)(data)
   retlist <- c(retlist, list("na.action" = na.action(data)))
 
 
-  # add in time breaks ------------------------------------------------------
-
+  # add in time breaks
   retlist <- c(retlist, list("breaks" = time_breaks))
 
   # lengthen data -----------------------------------------------------------
@@ -89,8 +91,7 @@ dpaf_data <- function(rawdata, variables, time_breaks, id_var,
 
   data <- merge(intervals, data, by = NULL)
 
-  # correct indicators and times ---------------------------------------------
-
+  # correct indicators and times
   if (!missing(death_time) && !missing(death_ind) &&
       !missing(disease_time) && !missing(disease_ind)) {
     data[[ft_end]] <- pmin(data[[death_time]], data[[disease_time]])
@@ -116,14 +117,12 @@ dpaf_data <- function(rawdata, variables, time_breaks, id_var,
   }
 
 
-  # set period to factor ----------------------------------------------------
-
+  # set period to factor
   data[[period_factor]] <- factor(data[[period_factor]],
                                   labels = levels(cut(numeric(0), time_breaks)))
 
 
-  # add data to list --------------------------------------------------------
-
+  # add data to list
   retlist <- c(retlist, list(ID = data[[id_var]],
                              PERIOD = data[[period_factor]]))
 
@@ -161,14 +160,31 @@ dpaf_data <- function(rawdata, variables, time_breaks, id_var,
 #'   \code{\link{dpaf_data}}
 #' @param ... other arguments to be passed to \code{\link[survival]{survreg}}.
 #'
-#' @return an object of class \code{dpaf}
+#' @return an object of class \code{dpaf}, containing all the elements of the
+#'   \code{dpaf_data}, plus the following elements:
+#'
+#'   \item{call}{the function call to fit the models}
+#'
+#'   \item{survreg_d, survreg_m}{the survival regression objects}
+#'
+#'   \item{coefficients}{a named matrix of coefficients from the survival
+#'   regressions}
+#'
+#'   \item{var}{a named list of the variance-covariance matrices from the
+#'   survival regressions}
+#'
+#'   Note that the order of names should always be \code{"disease", "mortality"}
+#'   for downpipe functions to work.
 #' @export
 #'
 dpaf <- function(disease_resp, death_resp, predictors, dpaf_data, ...) {
   model <- dpaf_data
+  stopifnot(inherits(model, "dpaf_response"))
 
   formula_d <- update(predictors, disease_resp)
   formula_m <- update(predictors, death_resp)
+
+  model$call <- match.call()
 
   model$survreg_d <- survival::survreg(formula_d, model$data,
                                        dist = "exponential", ...)
@@ -188,6 +204,107 @@ dpaf <- function(disease_resp, death_resp, predictors, dpaf_data, ...) {
   class(model) <- "dpaf"
   model
 }
+
+#' Split disease PAF data into groups by a factor
+#'
+#' This function is a wrapper around R-base's \code{split} function designed for
+#' \code{dpaf_data} structures.
+#'
+#' @param object An object of class \code{\link{dpaf_data}}.
+#' @param INDICES A factor or list of factors that can be passed to
+#'   \code{\link{split}}. Can optionally be named if a list.
+#' @inheritParams name_by
+#'
+#' @return A named list of \code{\link{dpaf_data}} objects, with names
+#'   corresponding to the names of the list output by \code{split}. If a named
+#'   list was given in \code{INDICES}, then these names will be included.
+#' @export
+dpaf_split <- function(object, INDICES, lsep = ": ", vsep = ", ") {
+  split_call <- match.call()
+
+  if (!is.null(names(INDICES))) {
+    INDICES <- mapply(function(fctr, nm) {
+      levels(fctr) <- paste0(nm, lsep, levels(fctr))
+      fctr
+    }, INDICES, names(INDICES), SIMPLIFY = FALSE)
+  }
+  IDs <- split(object$ID, INDICES, sep = vsep)
+  PERIODs <- split(object$PERIOD, INDICES)
+  data <- split(object$data, INDICES)
+
+  mapply(function(ids, periods, dfs) {
+    ret <- list(data_call = object$data_call,
+                split_call = split_call,
+                na.action = object$na.action,
+                breaks = object$breaks,
+                ID = ids,
+                PERIOD = periods,
+                data = dfs)
+    class(ret) <- c(class(object), "dpaf_split")
+    ret
+  }, IDs, PERIODs, data, SIMPLIFY = FALSE)
+}
+
+# End-user calculations ---------------------------------------------------
+
+#' Analyse groupwise PAF estimates
+#'
+#' @param object an object of class \code{dpaf}
+#' @param modlist a list of modifications to be passed to
+#'   \code{\link{predict.dpaf}}
+#' @param split_data a list of objects of class \code{dpaf_data}, from
+#'   \code{\link{dpaf_spl}}
+#' @param ... other arguments to be passed to \code{predict.dpaf}
+#'
+#' @return a list of two elements
+#'
+#'   \item{group_pafs}{calculated disease PAFs, as well as other information
+#'   output by \code{predict.dpaf}}
+#'
+#'   \item{paf_diffs}{differences between PAFs, with their standard errors, test
+#'   statistics, and p-values}
+#'
+#' @export
+dpaf_groups <- function(object, modlist, split_data, ...) {
+  stopifnot(inherits(object, "dpaf"))
+  stopifnot(any(sapply(inherits, split_data, "dpaf_split")))
+
+  gwise_preds <- lapply(split_data, stats::predict, object = object,
+                        modlist = modlist, type = 'paf', gradient = TRUE, ...)
+
+  pafs <- do.call(rbind, lapply(gwise_preds, `[[`, "estimate"))
+  # row.names(pafs) <- names(gwise_preds)
+
+  diffs <- utils::combn(gwise_preds, 2, FUN = function(preds) {
+    pred1 <- preds[[1]]
+    pred2 <- preds[[2]]
+
+    dpaf <- pred1$estimate["PAF"] - pred2$estimate["PAF"]
+    names(dpaf) <- NULL
+
+    dgrad <- list(
+      disease = pred1$disease - pred2$disease,
+      mortality = pred1$mortality - pred2$mortality
+    )
+
+    se_dpaf <- sqrt(sum(mapply(function(g, vv) t(g) %*% vv %*% g,
+                                dgrad, object$var)))
+
+    z <- dpaf / se_dpaf
+    p <- 2 * stats::pnorm(-abs(z))
+    c("PAF Diff" = dpaf, "SE(PAF Diff)" = se_dpaf, "Z value" = z, "Pr(>|Z|)" = p)
+  }, simplify = FALSE)
+
+  names(diffs) <- utils::combn(names(gwise_preds), 2, paste, collapse = " - ")
+
+  list(
+    group_pafs = pafs,
+    paf_diffs = do.call(rbind, diffs)
+  )
+}
+
+
+# Intermediate calculation functions --------------------------------------
 
 #' Calculate hazards for dpaf study
 #'
