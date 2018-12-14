@@ -8,7 +8,7 @@
 #' @param time_breaks numeric vector of breaks between periods of constant
 #'   hazard
 #' @param id_var column of data frame identifying individuals (will be generated
-#'   sequentially if missing)
+#'   sequentially if missing or \code{NULL})
 #' @param death_time column name, describing time of death or censoring
 #' @param death_ind column name, which is \code{TRUE} if individual died during
 #'   follow up
@@ -63,7 +63,7 @@ dpaf_data <- function(rawdata, variables, time_breaks, id_var,
   if (is.unsorted(time_breaks))
     stop("Time breaks are not in order.")
 
-  if (missing(id_var)) {
+  if (missing(id_var) || is.null(id_var)) {
     id_var <- "ID"
     rawdata[[id_var]] <- 1:nrow(rawdata)
   }
@@ -219,7 +219,7 @@ dpaf <- function(disease_resp, death_resp, predictors, dpaf_data, ...) {
 #'   corresponding to the names of the list output by \code{split}. If a named
 #'   list was given in \code{INDICES}, then these names will be included.
 #' @export
-dpaf_split <- function(object, INDICES, lsep = ": ", vsep = ", ") {
+dpaf_split <- function(object, INDICES, lsep = ": ", fsep = ", ") {
   split_call <- match.call()
 
   if (!is.null(names(INDICES))) {
@@ -228,7 +228,7 @@ dpaf_split <- function(object, INDICES, lsep = ": ", vsep = ", ") {
       fctr
     }, INDICES, names(INDICES), SIMPLIFY = FALSE)
   }
-  IDs <- split(object$ID, INDICES, sep = vsep)
+  IDs <- split(object$ID, INDICES, sep = fsep)
   PERIODs <- split(object$PERIOD, INDICES)
   data <- split(object$data, INDICES)
 
@@ -253,7 +253,7 @@ dpaf_split <- function(object, INDICES, lsep = ": ", vsep = ", ") {
 #' @param modlist a list of modifications to be passed to
 #'   \code{\link{predict.dpaf}}
 #' @param split_data a list of objects of class \code{dpaf_data}, from
-#'   \code{\link{dpaf_spl}}
+#'   \code{\link{dpaf_split}}
 #' @param ... other arguments to be passed to \code{predict.dpaf}
 #'
 #' @return a list of two elements
@@ -302,6 +302,10 @@ dpaf_groups <- function(object, modlist, split_data, ...) {
     paf_diffs = do.call(rbind, diffs)
   )
 }
+
+
+# Print and summary functions ---------------------------------------------
+
 
 
 # Intermediate calculation functions --------------------------------------
