@@ -149,7 +149,7 @@ print.summary.dpaf <- function(x, ..., coef_regex = "",
 
   if (!is.null(x$paf_diffs)) {
     cat("\nAnalysis of differences between groupwise PAFs:\n")
-    printCoefmat(x$paf_diffs, digits = digits, k = 2)
+    stats::printCoefmat(x$paf_diffs, digits = digits, k = 2)
     cat(vsep)
   }
 }

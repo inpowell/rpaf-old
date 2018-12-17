@@ -217,6 +217,7 @@ dpaf <- function(disease_resp, death_resp, predictors, dpaf_data, ...) {
 #'   setting \code{survreg_summ} to \code{'both'} (if \code{TRUE}) or
 #'   \code{'none'} (if \code{FALSE})
 #' @param confint if \code{TRUE}, calculate confidence intervals for statistics
+#' @param level width of confidence interval, if desired
 #' @param group_diffs if \code{TRUE} (and \code{group} is supplied), analyse the
 #'   differences between groupwise PAFs
 #' @param survreg_summ which survival regression summaries, if any, to include
