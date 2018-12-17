@@ -71,6 +71,7 @@ predict.dpaf <- function(object, modlist, newdata,
     else
       dpdta <- newdata
 
+    # prepare design matrices Z (z_raw) and Z^* (z_mod)
     mod_df <- apply_modifications(dpdta$data, modlist)
     raw_frame <- stats::model.frame(Terms, data = dpdta$data,
                                     na.action = stats::na.pass,
@@ -82,6 +83,7 @@ predict.dpaf <- function(object, modlist, newdata,
     z_raw <- stats::model.matrix(Terms, raw_frame)
     z_mod <- stats::model.matrix(Terms, mod_frame)
 
+    # perform intermediate calculations -- see R/disease_calc.R for details
     hz_raw <- dpaf_hz(z_raw, cf)
     sv_raw <- dpaf_sv(hz_raw, dpdta$ID, dpdta$PERIOD, diff(dpdta$breaks))
     svp_raw <- dpaf_svp(sv_raw)
@@ -107,8 +109,10 @@ predict.dpaf <- function(object, modlist, newdata,
                            gipaf, vv_l))
     }
 
+    # PAF estimate
     pred <- c("PAF" = 1 - i_mod / i_raw)
 
+    # add standard error, confidence intervals to output
     if (se.trans)
       pred <- c(pred, "SE iPAF"=sqrt(v_ipaf))
     if (confint) {
@@ -122,8 +126,12 @@ predict.dpaf <- function(object, modlist, newdata,
     if (gradient)
       pred <- c("estimate" = list(pred), dpaf_gpaf(gi_mod, i_mod, gi_raw, i_raw))
   }
+
+  # hazard ratio calculations
   if (type == 'hr') {
     pred <- split(-cf, col(cf, as.factor = TRUE)) # log hazard ratios
+
+    # make names informative
     names(pred$disease) <- row.names(cf)
     names(pred$mortality) <- row.names(cf)
 

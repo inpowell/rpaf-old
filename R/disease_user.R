@@ -83,7 +83,7 @@ dpaf_data <- function(rawdata, variables, time_breaks, id_var,
 
 
   # add in time breaks
-  retlist <- c(retlist, list("breaks" = time_breaks))
+  retlist$breaks <- time_breaks
 
   # lengthen data -----------------------------------------------------------
   # integer codes as in findInterval -- note not a factor yet
@@ -118,12 +118,12 @@ dpaf_data <- function(rawdata, variables, time_breaks, id_var,
   }
 
 
-  # set period to factor
+  # set period to factor variable
   data[[period_factor]] <- factor(data[[period_factor]],
                                   labels = levels(cut(numeric(0), time_breaks)))
 
 
-  # add data to list
+  # add ID and PERIOD indicial vectors to return list
   retlist <- c(retlist, list(ID = data[[id_var]],
                              PERIOD = data[[period_factor]]))
 
@@ -138,7 +138,6 @@ dpaf_data <- function(rawdata, variables, time_breaks, id_var,
     rel_data <- cbind(rel_data, data[,period_factor, drop = FALSE])
 
   retlist <- c(retlist, list(data = rel_data))
-
 
   if (missing(death_time) || missing(death_ind) ||
       missing(disease_time) || missing(disease_ind))
@@ -270,13 +269,15 @@ summary.dpaf <- function(object, modlist, group, newdata,
   if (survreg_summ %in% c('mortality', 'both'))
     x$summary_m <- summary(object$survreg_m, ...)
 
+  # NOTE -- this calls the predict.dpaf function in R/disease_prediction.R
   x$hazard_ratios <- predict.dpaf(object, type = 'hr', confint = confint,
                                   level = level, ...)
-  if (confint) x$level <- level
+  if (confint)
+    x$level <- level
 
   if (!missing(modlist)) {
     x$modlist <- modlist
-    # calculate PAFs
+    # calculate PAFs -- see predict.dpaf in R/disease_prediction.R for more info
     x$paf <- predict.dpaf(object, modlist, newdata, confint = confint,
                           level = level, gradient = FALSE, ...)
 
