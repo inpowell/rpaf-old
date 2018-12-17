@@ -393,7 +393,6 @@ summary.mpafreg <- function(object, modlist, group, newdata,
   return(x)
 }
 
-#' @keywords internal
 #' @export
 #' @method print summary.mpafreg
 print.summary.mpafreg <- function(x, digits = max(3L, getOption("digits") - 3L),

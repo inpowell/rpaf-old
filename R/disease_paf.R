@@ -29,6 +29,8 @@
 #'
 #'   \item{data_call}{The function call to generate data in this form}
 #'
+#'   \item{nobs}{The number of observations used from the initial data frame}
+#'
 #'   \item{na.action}{The IDs removed from the data due to missingness}
 #'
 #'   \item{breaks}{A vector of times where baseline hazard changes}
@@ -78,7 +80,7 @@ dpaf_data <- function(rawdata, variables, time_breaks, id_var,
 
   # handle missing values
   data <- match.fun(na.action)(data)
-  retlist <- c(retlist, list("na.action" = na.action(data)))
+  retlist <- c(retlist, list(nobs = nrow(data), na.action = na.action(data)))
 
 
   # add in time breaks
@@ -161,7 +163,7 @@ dpaf_data <- function(rawdata, variables, time_breaks, id_var,
 #' @param ... other arguments to be passed to \code{\link[survival]{survreg}}.
 #'
 #' @return an object of class \code{dpaf}, containing all the elements of the
-#'   \code{dpaf_data}, plus the following elements:
+#'   \code{\link{dpaf_data}}, plus the following elements:
 #'
 #'   \item{call}{the function call to fit the models}
 #'
@@ -254,59 +256,300 @@ dpaf_split <- function(object, INDICES, lsep = ": ", fsep = ", ") {
 #'   \code{\link{predict.dpaf}}
 #' @param split_data a list of objects of class \code{dpaf_data}, from
 #'   \code{\link{dpaf_split}}
+#' @param gdiffs if \code{TRUE}, analyse the differences in PAFs between groups
 #' @param ... other arguments to be passed to \code{predict.dpaf}
 #'
-#' @return a list of two elements
+#' @return a list of up to two elements
 #'
-#'   \item{group_pafs}{calculated disease PAFs, as well as other information
-#'   output by \code{predict.dpaf}}
+#'   \item{group_pafs}{a matrix of calculated disease PAFs, as well as other
+#'   information output by \code{predict.dpaf}}
 #'
-#'   \item{paf_diffs}{differences between PAFs, with their standard errors, test
-#'   statistics, and p-values}
+#'   \item{paf_diffs}{(optional) a matrix of differences between PAFs, with
+#'   their standard errors, test statistics, and p-values}
 #'
 #' @export
-dpaf_groups <- function(object, modlist, split_data, ...) {
+dpaf_groups <- function(object, modlist, split_data, gdiffs = TRUE, ...) {
   stopifnot(inherits(object, "dpaf"))
-  stopifnot(any(sapply(inherits, split_data, "dpaf_split")))
+  stopifnot(all(sapply(split_data, inherits, "dpaf_split")))
 
   gwise_preds <- lapply(split_data, stats::predict, object = object,
-                        modlist = modlist, type = 'paf', gradient = TRUE, ...)
+                        modlist = modlist, type = 'paf', gradient = gdiffs, ...)
 
-  pafs <- do.call(rbind, lapply(gwise_preds, `[[`, "estimate"))
-  # row.names(pafs) <- names(gwise_preds)
+  if (gdiffs) {
+    pafs <- do.call(rbind, lapply(gwise_preds, `[[`, "estimate"))
+    diffs <- utils::combn(gwise_preds, 2, FUN = function(preds) {
+      pred1 <- preds[[1]]
+      pred2 <- preds[[2]]
 
-  diffs <- utils::combn(gwise_preds, 2, FUN = function(preds) {
-    pred1 <- preds[[1]]
-    pred2 <- preds[[2]]
+      dpaf <- pred1$estimate["PAF"] - pred2$estimate["PAF"]
+      names(dpaf) <- NULL
 
-    dpaf <- pred1$estimate["PAF"] - pred2$estimate["PAF"]
-    names(dpaf) <- NULL
+      dgrad <- list(
+        disease = pred1$disease - pred2$disease,
+        mortality = pred1$mortality - pred2$mortality
+      )
 
-    dgrad <- list(
-      disease = pred1$disease - pred2$disease,
-      mortality = pred1$mortality - pred2$mortality
+      se_dpaf <- sqrt(sum(mapply(function(g, vv) t(g) %*% vv %*% g,
+                                 dgrad, object$var)))
+
+      z <- dpaf / se_dpaf
+      p <- 2 * stats::pnorm(-abs(z))
+      c("PAF Diff" = dpaf, "SE(PAF Diff)" = se_dpaf, "Z value" = z, "Pr(>|Z|)" = p)
+    }, simplify = FALSE)
+
+    names(diffs) <- utils::combn(names(gwise_preds), 2, paste, collapse = " - ")
+  } else {
+    pafs <- do.call(rbind, gwise_preds)
+  }
+  if (gdiffs)
+    list(
+      group_pafs = pafs,
+      paf_diffs = do.call(rbind, diffs)
     )
-
-    se_dpaf <- sqrt(sum(mapply(function(g, vv) t(g) %*% vv %*% g,
-                                dgrad, object$var)))
-
-    z <- dpaf / se_dpaf
-    p <- 2 * stats::pnorm(-abs(z))
-    c("PAF Diff" = dpaf, "SE(PAF Diff)" = se_dpaf, "Z value" = z, "Pr(>|Z|)" = p)
-  }, simplify = FALSE)
-
-  names(diffs) <- utils::combn(names(gwise_preds), 2, paste, collapse = " - ")
-
-  list(
-    group_pafs = pafs,
-    paf_diffs = do.call(rbind, diffs)
-  )
+  else
+    list(group_pafs = pafs)
 }
 
 
 # Print and summary functions ---------------------------------------------
 
+#' @export
+print.dpaf <- function(x, ..., digits = max(getOption("digits") - 3, 3),
+                       vsep = strrep('-', getOption("width") * 0.75)) {
+  if (!is.null(cl <- x$call)) {
+    cat("\nCall:\n")
+    dput(cl)
+  }
+  if (!is.null(dcl <- x$data_call)) {
+    cat("\nData preparation call:\n")
+    dput(dcl)
+  }
+  cat(vsep)
+  if (!is.null(srd <- x$survreg_d) && !is.null(srm <- x$survreg_m)) {
+    cat("\nFormulas:")
+    cat("\n  Disease:\n"); dput(stats::formula(srd))
 
+    cat("\n  Mortality:\n"); dput(stats::formula(srm))
+    cat("\n")
+    cat(vsep)
+  }
+
+  if (length(x$na.action)) {
+    cat("\nCohort size: ", x$nobs, " (", stats::naprint(x$na.action), ")\n",
+        sep = "")
+    cat(vsep, "\n")
+  } else {
+    cat("\nCohort size: ", x$nobs, "\n", sep = "")
+    cat(vsep, "\n")
+  }
+
+  if (length(cf <- x$coefficients)) {
+    cat("Coefficients:\n")
+    print(cf, digits = digits, ...)
+    cat(vsep, '\n')
+  }
+  invisible(x)
+}
+
+#' Calculate and summarise disease PAFs
+#'
+#' @param object an object of class \code{dpaf} to summarise
+#' @param modlist an optional list of modifications for PAF calculations
+#' @param group an optional character vector of column names to group by
+#' @param newdata an optional \code{\link{dpaf_data}} object for external
+#'   prevalences
+#' @param comprehensive shorthand for \code{confint}, \code{group_diffs} and
+#'   setting \code{survreg_summ} to \code{'both'} (if \code{TRUE}) or
+#'   \code{'none'} (if \code{FALSE})
+#' @param confint if \code{TRUE}, calculate confidence intervals for statistics
+#' @param group_diffs if \code{TRUE} (and \code{group} is supplied), analyse the
+#'   differences between groupwise PAFs
+#' @param survreg_summ which survival regression summaries, if any, to include
+#' @param ... optional arguments passed to \code{\link{predict.dpaf}},
+#'   \code{\link[survival]{summary.survreg}}, \code{\link{dpaf_split}} and other
+#'   functions
+#'
+#' @return a list of potentially interesting quantities of class
+#'   \code{'summary.dpaf'}:
+#'
+#'   \item{call, data_call, nobs, na.action, breaks}{as for \code{dpaf_data} and
+#'   \code{dpaf}}
+#'
+#'   \item{summary_d, summary_m}{summaries of the survival regressions for
+#'   disease and mortality respectively}
+#'
+#'   \item{hazard_ratios}{a list of hazard ratios, possibly with confidence
+#'   intervals and standard errors in log-space}
+#'
+#'   \item{level}{(optional) the level of the confidence interval, if used in
+#'   calculations}
+#'
+#'   \item{modlist}{(optional) the list of modifications used for PAF
+#'   calculation}
+#'
+#'   \item{paf}{(optional) a pointwise disease PAF estimate, possibly with
+#'   confidence interval and standard error for the iPAF}
+#'
+#'   \item{group_pafs}{(optional) pointwise estimates for PAFs in each group, as
+#'   well as other information requested}
+#'
+#'   \item{paf_diffs}{(optional) differences between PAF estimates, with their
+#'   standard errors, Z-test statistics, and p-values}
+#'
+#' @export
+summary.dpaf <- function(object, modlist, group, newdata,
+                         comprehensive = FALSE,
+                         confint = comprehensive, level = 0.95,
+                         group_diffs = comprehensive,
+                         survreg_summ = if (comprehensive)
+                           c('both', 'disease', 'mortality', 'none')
+                         else c('none', 'disease', 'mortality', 'both'),
+                         ...) {
+  x <- object[match(c("call", "data_call", "nobs", "na.action", "breaks"),
+                    names(object), nomatch = 0)]
+
+  survreg_summ <- match.arg(survreg_summ)
+  if (survreg_summ %in% c('disease', 'both'))
+    x$summary_d <- summary(object$survreg_d, ...)
+  if (survreg_summ %in% c('mortality', 'both'))
+    x$summary_m <- summary(object$survreg_m, ...)
+
+  x$hazard_ratios <- predict.dpaf(object, type = 'hr', confint = confint,
+                                  level = level, ...)
+  if (confint) x$level <- level
+
+  if (!missing(modlist)) {
+    x$modlist <- modlist
+    # calculate PAFs
+    x$paf <- predict.dpaf(object, modlist, newdata, confint = confint,
+                          level = level, gradient = FALSE, ...)
+
+    if (!missing(group)) {
+      dpdta <- if (missing(newdata)) object else newdata
+      dp_spl <- dpaf_split(dpdta, dpdta$data[, group, drop = FALSE], ...)
+      x <- c(x, dpaf_groups(object, modlist, dp_spl, gdiffs = group_diffs, ...))
+    }
+  }
+
+  class(x) <- 'summary.dpaf'
+  return(x)
+}
+
+#' @export
+#' @method print summary.dpaf
+print.summary.dpaf <- function(x, ..., coef_regex = "",
+                               digits = max(3L, getOption("digits") - 3L),
+                               vsep = strrep("-", getOption("width") * 0.75)) {
+  if (!is.null(cl <- x$call)) {
+    cat("\nCall:\n")
+    dput(cl)
+  }
+  if (!is.null(dcl <- x$data_call)) {
+    cat("\nData preparation call:\n")
+    dput(dcl)
+  }
+  cat(vsep)
+
+  if (!is.null(x$summary_d)) {
+    cat("\nDisease regression summary:\n")
+    print(x$summary_d, digits = digits, ...)
+    cat(vsep)
+  }
+  if (!is.null(x$summary_m)) {
+    cat("\nMortality regression summary:\n")
+    print(x$summary_m, digits = digits, ...)
+    cat(vsep)
+  }
+
+
+  if (length(x$na.action)) {
+    cat("\nCohort size: ", x$nobs, " (", stats::naprint(x$na.action), ")\n",
+        sep = "")
+    cat(vsep)
+  } else {
+    cat("\nCohort size: ", x$nobs, "\n", sep = "")
+    cat(vsep)
+  }
+
+  if (!is.null(x$hazard_ratios)) {
+    cat("\nHazard ratios:\n")
+    coef_rows <- grep(coef_regex, rownames(x$hazard_ratios$disease))
+
+    cat("\n    Disease:\n")
+    hr_d <- x$hazard_ratios$disease[coef_rows,]
+    if (!is.null(x$level)) {
+      colnames(hr_d)[which(colnames(hr_d) == "lwr")] <-
+        paste("Lower", paste0(format(100 * x$level, digits = digits, ...), "%"),
+              "CL")
+      colnames(hr_d)[which(colnames(hr_d) == "upr")] <-
+        paste("Upper", paste0(format(100 * x$level, digits = digits, ...), "%"),
+              "CL")
+    }
+    print(hr_d, digits = digits, ...)
+
+    cat("\n    Mortality:\n")
+    hr_d <- x$hazard_ratios$mortality[coef_rows,]
+    if (!is.null(x$level)) {
+      colnames(hr_d)[which(colnames(hr_d) == "lwr")] <-
+        paste("Lower", paste0(format(100 * x$level, digits = digits, ...), "%"),
+              "CL")
+      colnames(hr_d)[which(colnames(hr_d) == "upr")] <-
+        paste("Upper", paste0(format(100 * x$level, digits = digits, ...), "%"),
+              "CL")
+    }
+    print(hr_d, digits = digits, ...)
+
+    cat(vsep)
+  }
+
+  if (!is.null(x$modlist)) {
+    cat("\nModifications:\n")
+    lapply(X = seq_along(x$modlist), FUN = function(i, lst) {
+      if (length(lst[[i]]) > 1)
+        cat(names(lst)[i], ": ",  paste(lst[[i]][-1], collapse = ", "),
+            " -> ", lst[[i]][1], "\n", sep = "")
+      else
+        cat(names(lst)[i], ": ", ".",
+            " -> ", lst[[i]][1], "\n", sep = "")
+    }, lst = x$modlist)
+    cat(vsep)
+  }
+
+  if (!is.null(x$paf)) {
+    cat("\nPAF for disease incidence, censored by death:\n")
+    if (!is.null(x$level)) {
+      names(x$paf)[which(names(x$paf) == "lwr")] <-
+        paste("Lower", paste0(format(100 * x$level, digits = digits, ...), "%"),
+              "CL")
+      names(x$paf)[which(names(x$paf) == "upr")] <-
+        paste("Upper", paste0(format(100 * x$level, digits = digits, ...), "%"),
+              "CL")
+    }
+    print(x$paf, digits = digits, ...)
+    cat(vsep)
+  }
+
+  if (!is.null(pafs <- x$group_pafs)) {
+    if (!is.null(x$level)) {
+      colnames(pafs)[which(colnames(pafs) == "lwr")] <-
+        paste("Lower", paste0(format(100 * x$level, digits = digits, ...), "%"),
+              "CL")
+      colnames(pafs)[which(colnames(pafs) == "upr")] <-
+        paste("Upper", paste0(format(100 * x$level, digits = digits, ...), "%"),
+              "CL")
+    }
+
+    cat("\nGroupwise PAF estimates:\n")
+    print(pafs, digits = digits, ...)
+    cat(vsep)
+  }
+
+  if (!is.null(x$paf_diffs)) {
+    cat("\nAnalysis of differences between groupwise PAFs:\n")
+    printCoefmat(x$paf_diffs, digits = digits, k = 2)
+    cat(vsep)
+  }
+}
 
 # Intermediate calculation functions --------------------------------------
 
@@ -358,13 +601,13 @@ dpaf_svp <- function(sv) {
 #'
 #' @return (numeric, scalar) healthy mortality, perhaps to some constant factor
 #' @keywords internal
+
 dpaf_i <- function(hz, svp, ID, PERIOD) {
   if (any(tapply(PERIOD, ID, is.unsorted)))
     stop("Periods must be in ascending order for each ID to calculate I")
 
   svd <- stats::ave(svp, ID, FUN = function(s) -diff(c(1, s)))
   ## (survival at time 0 is 1)
-
   sum(hz[,"disease"] / rowSums(hz) * svd)
 }
 
