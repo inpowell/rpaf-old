@@ -2,7 +2,7 @@
 
 #' Prepare data for PAF disease studies
 #'
-#' @param rawdata a data frame containing
+#' @param rawdata a data frame containing the cohort study data to analyse
 #' @param variables character vector of variables of interest
 #' @param time_breaks numeric vector of breaks between periods of constant
 #'   hazard
