@@ -103,7 +103,7 @@ mpaf_gen_data <- function(
   class(mpaf) <- "mpaf_data"
 
   if (!missing(death_ind) && !missing(death_time))
-    class(mpaf <- c(class(mpaf), "mpaf_response"))
+    class(mpaf) <- c(class(mpaf), "mpaf_response")
 
   mpaf
 }
