@@ -1,7 +1,7 @@
 #' Calculate hazards for mpaf study
 #'
 #' @param z model matrix
-#' @param cf named vector $\gamma$ of parameter estimates
+#' @param cf named vector \eqn{\gamma} of parameter estimates
 #'
 #' @return named matrix of hazards
 #' @keywords internal
@@ -44,9 +44,9 @@ mpaf_delta_S <- function(S, ID, PERIOD) {
 #' Calculate average mortality $I$ for mpaf study
 #'
 #' @param dS vector of survival differences -- if cumulative mortality over time
-#'   $(0, a_j]$ is desired, then \code{dS} should be \code{1-S}, but if
-#'   mortality over a period $(a_{j-1}, a_j]$ is desired, then \code{dS} should
-#'   be $\Delta{S}$ as output by \code{\link{mpaf_delta_S}}.
+#'   \eqn{(0, a_j]} is desired, then \code{dS} should be \code{1-S}, but if
+#'   mortality over a period \eqn{(a_{j-1}, a_j]} is desired, then \code{dS}
+#'   should be \eqn{\Delta{S}} as output by \code{\link{mpaf_delta_S}}.
 #' @param ID vector of corresponding IDs
 #' @param PERIOD vector of corresponding periods
 #'
@@ -113,7 +113,7 @@ mpaf_grad_delta_S <- function(grad_S, ID, PERIOD) {
   )
 }
 
-#' Calculate average mortality gradient $\nabla{I}$ for mpaf study
+#' Calculate average mortality gradient \eqn{\nabla{I}} for mpaf study
 #'
 #' @param grad_dS matrix of gradient survival differences -- if cumulative
 #'   mortality over time $(0, a_j]$ is desired, then \code{dS} should be
