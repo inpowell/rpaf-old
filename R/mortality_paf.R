@@ -54,7 +54,7 @@ mpaf_est_matrix <- function(sr_formula, mpaf_data, modifications,
   )
   dimnames(matrix_data$HR)[[2]] <- dimnames(matrix_data$HR)[[2]][c(1,3,2)]
 
-  Terms <- object$survreg$terms
+  Terms <- sr_formula$survreg$terms
   if (!inherits(Terms, "terms"))
     # I don't know why this is needed -- it's from survival:::predict.survreg
     stop("invalid terms component of survreg in object")
