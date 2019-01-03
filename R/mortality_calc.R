@@ -6,7 +6,7 @@
 #' @return named matrix of hazards
 #' @keywords internal
 mpaf_lambda <- function(z, cf) {
-  exp(z %*% -cf)
+  as.vector(exp(z %*% -cf))
 }
 
 #' Calculate survivals for mpaf study
