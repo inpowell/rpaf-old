@@ -34,8 +34,6 @@
 #'   requested)}
 #'
 #' @export
-#'
-#' @examples
 mpaf_gen_data <- function(
   indata,
   id_var,
