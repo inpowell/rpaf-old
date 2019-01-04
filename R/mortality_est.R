@@ -86,15 +86,9 @@ mpaf_est_matrix <- function(sr_formula, mpaf_data, modifications,
   dimnames(matrix_data$HR)[[1]] <- params
   dimnames(matrix_data$HR)[[2]] <- dimnames(matrix_data$HR)[[2]][c(1,3,2)]
 
-  matrix_data$design <- stats::model.frame(Terms, data = mpaf_data$data,
-                                           na.action = na.pass,
-                                           xlev = matrix_data$survreg$xlevels)
-  mod_df <- apply_modifications(mpaf_data$data, modifications)
-  matrix_data$modified <- stats::model.frame(Terms, data = mod_df,
-                                             na.action = na.pass,
-                                             xlev = matrix_data$survreg$xlevels)
-
-  retlist <- c(mpaf_data, matrix_data)
+  retlist <- c(mpaf_data, matrix_data,
+               design_frames(mpaf_data$data, Terms, modifications,
+                             matrix_data$survreg$xlevels))
   class(retlist) <- "mpaf_est_matrix"
 
   retlist
@@ -120,9 +114,18 @@ mpaf_est_matrix <- function(sr_formula, mpaf_data, modifications,
 #'
 #' @export
 mpaf_est_paf <- function(mpaf_fit, newdata, level = 0.95) {
-  if (!missing(newdata))
-    # New data might need to be implemented in mpaf_est_matrix?
-    stop("Use of new data is not yet implemented.")
+  if (!missing(newdata)) {
+    stopifnot(inherits(newdata, "mpaf_data"))
+    if (!identical(mpaf_fit$data_call$ft_breaks, newdata$data_call$ft_breaks))
+      stop("Original periods and new periods are incompatible")
+    if (!identical(mpaf_fit$data_call$variables, newdata$data_call$variables))
+      stop("Original variables and new variables are different")
+    if (!identical(mpaf_fit$data_call$period_factor,
+                   newdata$data_call$period_factor))
+      stop(paste("Name of period factor columns are not equal.",
+                 "Ensure mpaf_gen_data is called with identical",
+                 "period_factor arguments"))
+  }
 
   tm <- mpaf_fit$terms
   cf <- mpaf_fit$coefficients
@@ -133,8 +136,15 @@ mpaf_est_paf <- function(mpaf_fit, newdata, level = 0.95) {
 
   # Point estimate calculations ---------------------------------------------
 
-  z <-      stats::model.matrix(tm, mpaf_fit$design)
-  z_star <- stats::model.matrix(tm, mpaf_fit$modified)
+  if (missing(newdata)) {
+    z <-      stats::model.matrix(tm, mpaf_fit$design)
+    z_star <- stats::model.matrix(tm, mpaf_fit$modified)
+  } else {
+    newframes <- design_frames(newdata$data, tm, mpaf_fit$modifications,
+                               mpaf_fit$survreg$xlevels)
+    z <-      stats::model.matrix(tm, newframes$design)
+    z_star <- stats::model.matrix(tm, newframes$modified)
+  }
 
   lambda <-      mpaf_lambda(z,      cf)
   lambda_star <- mpaf_lambda(z_star, cf)

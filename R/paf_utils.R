@@ -73,3 +73,22 @@ name_by <- function(x, lsep = ": ", fsep = ", ") {
   names(x) <- newnames
   x
 }
+
+#' Create design frames from data
+#'
+#' @param df initial data frame
+#' @param terms object of terms with response dropped
+#' @param modifications list of modifications to make (see
+#'   \code{apply_modifications} for format)
+#' @param xlev xlevels object from the survival regression
+#'
+#' @return a list of two model frames, \code{design} and \code{modified},
+#'   carrying predictor values
+#' @keywords internal
+design_frames <- function(df, terms, modifications, xlev) {
+  design <- stats::model.frame(terms, df, na.action = na.pass, xlev = xlev)
+  mdf <- apply_modifications(df, modifications)
+  modified <- stats::model.frame(terms, mdf, na.action = na.pass, xlev = xlev)
+
+  list(design = design, modified = modified)
+}
