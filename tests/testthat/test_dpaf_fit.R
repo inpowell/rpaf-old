@@ -1,5 +1,5 @@
 library(testthat)
-context("Morbidity")
+context("Disease PAF Morbidity")
 
 library(rpaf)
 

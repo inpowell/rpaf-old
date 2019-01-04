@@ -1,6 +1,6 @@
 library(testthat)
 
-context("Gradients")
+context("Disease PAF Gradients")
 library(rpaf)
 
 
