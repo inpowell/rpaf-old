@@ -104,10 +104,22 @@ mpaf_est_matrix <- function(sr_formula, mpaf_data, modifications,
 #'
 #' @param mpaf_fit an object of class \code{mpaf_est_matrix}
 #' @param newdata (not yet implemented) a new prevalence matrix, in some form
+#' @param level width of confidence interval, default 0.95
 #'
-#' @return
+#' @return a list of class \code{mpaf} containing the following elements:
+#'
+#'   \item{paf, paf0}{the mortality PAFs for individual and cumulative periods,
+#'   respectively, with their confidence intervals as specified by the
+#'   \code{level} argument}
+#'
+#'   \item{se_ipaf, se_ipaf0}{the standard errors for \eqn{\log(1-PAF)}, as
+#'   above}
+#'
+#'   \item{grad_paf, grad_paf0}{the gradients of the PAFs as above, for
+#'   difference calculations}
+#'
 #' @export
-mpaf_est_paf <- function(mpaf_fit, newdata) {
+mpaf_est_paf <- function(mpaf_fit, newdata, level = 0.95) {
   if (!missing(newdata))
     # New data might need to be implemented in mpaf_est_matrix?
     stop("Use of new data is not yet implemented.")
@@ -118,6 +130,8 @@ mpaf_est_paf <- function(mpaf_fit, newdata) {
   ID <- mpaf_fit$ID
   PERIOD <- mpaf_fit$PERIOD
   dt <- diff(mpaf_fit$breaks)
+
+  # Point estimate calculations ---------------------------------------------
 
   z <-      stats::model.matrix(tm, mpaf_fit$design)
   z_star <- stats::model.matrix(tm, mpaf_fit$modified)
@@ -145,6 +159,8 @@ mpaf_est_paf <- function(mpaf_fit, newdata) {
   ipaf0 <- log(I_0_star) - log(I_0)
   ipaf <- log(I_star) - log(I)
 
+  # Gradient calculations ---------------------------------------------------
+
   grad_lambda <-      mpaf_grad_lambda(z,      lambda)
   grad_lambda_star <- mpaf_grad_lambda(z_star, lambda_star)
 
@@ -169,16 +185,29 @@ mpaf_est_paf <- function(mpaf_fit, newdata) {
   var_ipaf0 <- grad_ipaf0 %*% vv %*% t(grad_ipaf0)
   var_ipaf <- grad_ipaf %*% vv %*% t(grad_ipaf)
 
+  # standard error and confint calculations ---------------------------------
+
+  a <- (1 - level)/2
+  a <- c(a, 1 - a)
+
+  se_ipaf0 <- sqrt(diag(var_ipaf0))
+  ci0 <- ipaf0 + se_ipaf0 * stats::qnorm(1 - a)
+  colnames(ci0) <- paste(format(100*a, trim = TRUE, scientific = FALSE,
+                                digits = 3), "%")
+  paf0 <- -expm1(cbind("PAF" = ipaf0, ci0))
+
+  se_ipaf <- sqrt(diag(var_ipaf))
+  ci <- ipaf + se_ipaf * stats::qnorm(1 - a)
+  colnames(ci) <- paste(format(100*a, trim = TRUE, scientific = FALSE,
+                               digits = 3), "%")
+  paf <- -expm1(cbind("PAF" - ipaf, ci))
+
   list(
-    lambda = lambda,
-    S = S,
-    I = I,
-    grad_lambda = grad_lambda,
-    grad_S = grad_S,
-    grad_I = grad_I,
-    ipaf0 = ipaf0,
-    var_ipaf0 = var_ipaf0,
-    ipaf = ipaf,
-    var_ipaf = var_ipaf
+    paf0 = paf0,
+    paf = paf,
+    se_ipaf0 = se_ipaf0,
+    se_ipaf = se_ipaf,
+    grad_paf0 = (grad_I_0 * I_0_star - grad_I_0_star * I_0) / I_0 ^ 2,
+    grad_paf = (grad_I * I_star - grad_I_star * I) / I ^ 2,
   )
 }
