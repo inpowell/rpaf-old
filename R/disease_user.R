@@ -307,6 +307,7 @@ summary.dpaf <- function(object, modlist, group, newdata,
 #'   list was given in \code{INDICES}, then these names will be included.
 #' @export
 dpaf_split <- function(object, INDICES, lsep = ": ", fsep = ", ") {
+  .Deprecated("paf_data_split")
   split_call <- match.call()
 
   if (!is.null(names(INDICES))) {

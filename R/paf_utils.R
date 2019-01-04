@@ -53,6 +53,7 @@ apply_modifications <- function(df, modlist) {
 #' @keywords internal
 #'
 name_by <- function(x, lsep = ": ", fsep = ", ") {
+  .Deprecated("paf_data_split")
   ## produced with the help of the `print.by` base function
   d <- dim(x)
   dn <- dimnames(x)
@@ -91,4 +92,45 @@ design_frames <- function(df, terms, modifications, xlev) {
   modified <- stats::model.frame(terms, mdf, na.action = na.pass, xlev = xlev)
 
   list(design = design, modified = modified)
+}
+
+#' Split PAF data into groups by a factor
+#'
+#' This function is a wrapper around R-base's \code{split} function designed for
+#' \code{mpaf_data} and \code{dpaf_data} structures.
+#'
+#' @param object An object of class \code{mpaf_data} or \code{\link{dpaf_data}}.
+#' @param INDICES A factor or list of factors that can be passed to
+#'   \code{\link{split}}. Can optionally be named if a list.
+#' @param lsep character separator between a factor name and the level
+#' @param fsep character separator between two factors
+#'
+#' @return A named list of \code{\link{[dm]paf_data}} objects, with names
+#'   corresponding to the names of the list output by \code{split}. If a named
+#'   list was given in \code{INDICES}, then these names will be included.
+#' @export
+paf_data_split <- function(object, INDICES, lsep = ": ", fsep = ", ") {
+  split_call <- match.call()
+
+  if (!is.null(names(INDICES))) {
+    INDICES <- mapply(function(fctr, nm) {
+      levels(fctr) <- paste0(nm, lsep, levels(fctr))
+      fctr
+    }, INDICES, names(INDICES), SIMPLIFY = FALSE)
+  }
+  IDs <- split(object$ID, INDICES, sep = fsep)
+  PERIODs <- split(object$PERIOD, INDICES)
+  data <- split(object$data, INDICES)
+
+  mapply(function(ids, periods, dfs) {
+    ret <- list(data_call = object$data_call,
+                split_call = split_call,
+                na.action = object$na.action,
+                breaks = object$breaks,
+                ID = ids,
+                PERIOD = periods,
+                data = dfs)
+    class(ret) <- c(class(object), "paf_split")
+    ret
+  }, IDs, PERIODs, data, SIMPLIFY = FALSE)
 }
