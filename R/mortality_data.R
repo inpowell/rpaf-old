@@ -6,12 +6,13 @@
 #' @param death_ind Name of logical column indicating if death occurred before
 #'   censoring (i.e. \code{TRUE} if an individual died before the end of
 #'   follow-up)
-#' @param death_time Name of numerical column with individual time until
-#'   death or censoring
-#' @param variables Character vector of predictor columns to keep from \code{indata}
-#' @param include_period If \code{TRUE}, includes a column in the output data
-#'   set describing the follow-up period
-#' @param period_var,time_var Names of new columns in data frame representing
+#' @param death_time Name of numerical column with individual time until death
+#'   or censoring
+#' @param na.action Function (found via call to \code{match.fun}) which
+#'   indicates how this function should treat missing data
+#' @param variables Character vector of predictor columns to keep from
+#'   \code{indata}
+#' @param period_factor,time_var Names of new columns in data frame representing
 #'   individual follow-up period and follow-up time respectively
 #'
 #' @return A list of class \code{"mpaf_data"} containing three elements:
@@ -42,7 +43,6 @@ mpaf_gen_data <- function(
   death_time,
   variables = character(0),
   na.action = getOption("na.action"),
-#  include_period = TRUE,
   period_factor = "f_period",
   time_var = "f_end"
 ) {
