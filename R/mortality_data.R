@@ -15,7 +15,7 @@
 #' @param period_factor,time_var Names of new columns in data frame representing
 #'   individual follow-up period and follow-up time respectively
 #'
-#' @return A list of class \code{"mpaf_data"} containing three elements:
+#' @return A list of class \code{"mpaf_data"} containing these elements:
 #'
 #'   \item{data_call}{The function call to generate data in this form}
 #'
