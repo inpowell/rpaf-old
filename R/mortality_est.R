@@ -24,6 +24,8 @@
 #' @param covar_model an optional character vector describing variables of
 #'   interest for hazard ratio calculation
 #' @param ... extra parameters to be passed to \code{survreg} and \code{confint}
+#' @param level width of the confidence intervals for hazard ratios, default
+#'   0.95.
 #'
 #' @return a list of type \code{mpaf_est_matrix} with the following items:
 #'
@@ -44,6 +46,8 @@
 #' @export
 mpaf_est_matrix <- function(sr_formula, mpaf_data, modifications,
                             covar_model, level = 0.95, ...) {
+  stopifnot(inherits(mpaf_data, "mpaf_response"))
+
   matrix_data <- list(est_matrix_call = match.call(),
                       modifications = modifications)
 
@@ -201,16 +205,16 @@ mpaf_est_paf <- function(mpaf_fit, newdata, level = 0.95) {
   a <- c(a, 1 - a)
 
   se_ipaf0 <- sqrt(diag(var_ipaf0))
-  ci0 <- ipaf0 + se_ipaf0 * stats::qnorm(1 - a)
+  ci0 <- ipaf0 + se_ipaf0 %o% stats::qnorm(1 - a)
   colnames(ci0) <- paste(format(100*a, trim = TRUE, scientific = FALSE,
                                 digits = 3), "%")
   paf0 <- -expm1(cbind("PAF" = ipaf0, ci0))
 
   se_ipaf <- sqrt(diag(var_ipaf))
-  ci <- ipaf + se_ipaf * stats::qnorm(1 - a)
+  ci <- ipaf + se_ipaf %o% stats::qnorm(1 - a)
   colnames(ci) <- paste(format(100*a, trim = TRUE, scientific = FALSE,
                                digits = 3), "%")
-  paf <- -expm1(cbind("PAF" - ipaf, ci))
+  paf <- -expm1(cbind("PAF" = ipaf, ci))
 
   list(
     paf0 = paf0,
@@ -218,6 +222,6 @@ mpaf_est_paf <- function(mpaf_fit, newdata, level = 0.95) {
     se_ipaf0 = se_ipaf0,
     se_ipaf = se_ipaf,
     grad_paf0 = (grad_I_0 * I_0_star - grad_I_0_star * I_0) / I_0 ^ 2,
-    grad_paf = (grad_I * I_star - grad_I_star * I) / I ^ 2,
+    grad_paf = (grad_I * I_star - grad_I_star * I) / I ^ 2
   )
 }
