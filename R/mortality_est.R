@@ -225,3 +225,32 @@ mpaf_est_paf <- function(mpaf_fit, newdata, level = 0.95) {
     grad_paf = (grad_I * I_star - grad_I_star * I) / I ^ 2
   )
 }
+
+#' Estimate significance of groupwise differences in mortality PAFs
+#'
+#' The elements of the output from this function should be able to be passed to
+#' \code{\link[stats]{printCoefmat}}.
+#'
+#' @param mpaf1,mpaf2 objects of class \code{mpaf} (from
+#'   \code{\link{mpaf_est_paf}}) to be compared
+#' @param vv the covariance matrix of parameters
+#'
+#' @return a matrix containing the PAF differences, their standard errors, Z
+#'   values and p values.
+#' @export
+mpaf_est_diff <- function(mpaf1, mpaf2, vv) {
+  dpaf <- c(mpaf1$paf - mpaf2$paf, mpaf1$paf0 - mpaf2$paf0)
+
+  gdpaf <- rbind(mpaf1$grad_paf - mpaf2$grad_paf,
+                 mpaf1$grad_paf0 - mpaf2$grad_paf0)
+
+  se_dpaf <- sqrt(diag(gdpaf %*% vv %*% t(gdpaf)))
+  Z <- dpaf / se_dpaf
+
+  cbind(
+    "PAF Diff" = dpaf,
+    "SE(PAF Diff)" = se_dpaf,
+    "Z value" = Z,
+    "Pr(>|Z|)" = 2 * pnorm(-abs(Z))
+  )
+}
