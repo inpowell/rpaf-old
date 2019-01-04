@@ -134,8 +134,6 @@ mpaf_est_paf <- function(mpaf_fit, newdata, level = 0.95) {
   tm <- mpaf_fit$terms
   cf <- mpaf_fit$coefficients
   vv <- mpaf_fit$var
-  ID <- mpaf_fit$ID
-  PERIOD <- mpaf_fit$PERIOD
   dt <- diff(mpaf_fit$breaks)
 
   # Point estimate calculations ---------------------------------------------
@@ -143,11 +141,15 @@ mpaf_est_paf <- function(mpaf_fit, newdata, level = 0.95) {
   if (missing(newdata)) {
     z <-      stats::model.matrix(tm, mpaf_fit$design)
     z_star <- stats::model.matrix(tm, mpaf_fit$modified)
+    ID <- mpaf_fit$ID
+    PERIOD <- mpaf_fit$PERIOD
   } else {
     newframes <- design_frames(newdata$data, tm, mpaf_fit$modifications,
                                mpaf_fit$survreg$xlevels)
     z <-      stats::model.matrix(tm, newframes$design)
     z_star <- stats::model.matrix(tm, newframes$modified)
+    ID <- newdata$ID
+    PERIOD <- newdata$PERIOD
   }
 
   lambda <-      mpaf_lambda(z,      cf)
@@ -239,7 +241,7 @@ mpaf_est_paf <- function(mpaf_fit, newdata, level = 0.95) {
 #'   values and p values.
 #' @export
 mpaf_est_diff <- function(mpaf1, mpaf2, vv) {
-  dpaf <- c(mpaf1$paf - mpaf2$paf, mpaf1$paf0 - mpaf2$paf0)
+  dpaf <- c(mpaf1$paf[,1] - mpaf2$paf[,1], mpaf1$paf0[,1] - mpaf2$paf0[,1])
 
   gdpaf <- rbind(mpaf1$grad_paf - mpaf2$grad_paf,
                  mpaf1$grad_paf0 - mpaf2$grad_paf0)
