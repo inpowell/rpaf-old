@@ -57,7 +57,7 @@ mpaf_delta_S <- function(S, ID, PERIOD) {
 #' @return named vector of mortalities $I$ (see Warning on names)
 #' @keywords internal
 mpaf_I <- function(dS, PERIOD) {
-  tapply(dS, PERIOD, mean)
+  as.vector(tapply(dS, PERIOD, mean))
 }
 
 #' Calculate gradient of hazard for mpaf study
@@ -87,8 +87,8 @@ mpaf_grad_S <- function(grad_lambda, S, ID, PERIOD, dt) {
   if (any(tapply(PERIOD, ID, is.unsorted)))
     stop("Periods must be in ascending order for each ID to calculate survival")
 
-  grad_lambda_sum <- apply(grad_lambda, 2, function(gl_r)
-    stats::ave(gl_R, ID, function(gl_i.r) cumsum(gl_i.r * dt))
+  grad_lambda_sum <- apply(grad_lambda, 2, function(gl_..r)
+    stats::ave(gl_..r, ID, FUN = function(gl_i.r) cumsum(gl_i.r * dt))
   )
 
   -S * grad_lambda_sum
@@ -109,7 +109,8 @@ mpaf_grad_delta_S <- function(grad_S, ID, PERIOD) {
 
   # note grad_survival at time zero is zero
   apply(grad_S, 2, function(grad_S_..r)
-    stats::ave(grad_S_..r, ID, function(grad_S_i.r) -diff(c(0, grad_S_i.r)))
+    stats::ave(grad_S_..r, ID,
+               FUN = function(grad_S_i.r) -diff(c(0, grad_S_i.r)))
   )
 }
 

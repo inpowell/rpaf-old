@@ -145,5 +145,40 @@ mpaf_est_paf <- function(mpaf_fit, newdata) {
   ipaf0 <- log(I_0_star) - log(I_0)
   ipaf <- log(I_star) - log(I)
 
-  list(-expm1(ipaf0), -expm1(ipaf))
+  grad_lambda <-      mpaf_grad_lambda(z,      lambda)
+  grad_lambda_star <- mpaf_grad_lambda(z_star, lambda_star)
+
+  grad_S <-      mpaf_grad_S(grad_lambda,      S,      ID, PERIOD, dt)
+  grad_S_star <- mpaf_grad_S(grad_lambda_star, S_star, ID, PERIOD, dt)
+
+  grad_dS <-      mpaf_grad_delta_S(grad_S,      ID, PERIOD)
+  grad_dS_star <- mpaf_grad_delta_S(grad_S_star, ID, PERIOD)
+
+  grad_I <-      mpaf_grad_I(grad_dS,      ID, PERIOD)
+  grad_I_star <- mpaf_grad_I(grad_dS_star, ID, PERIOD)
+
+  grad_I_0 <-      mpaf_grad_I(-grad_S,      ID, PERIOD)
+  grad_I_0_star <- mpaf_grad_I(-grad_S_star, ID, PERIOD)
+  dimnames(grad_I_0)[[1]] <- dimnames(grad_I_0_star)[[1]] <- paste0(
+    "(", mpaf_fit$breaks[1], ",", tail(mpaf_fit$breaks, -1), "]"
+  )
+
+  grad_ipaf0 <- grad_I_0_star / I_0_star - grad_I_0 / I_0
+  grad_ipaf <- grad_I_star / I_star - grad_I / I
+
+  var_ipaf0 <- grad_ipaf0 %*% vv %*% t(grad_ipaf0)
+  var_ipaf <- grad_ipaf %*% vv %*% t(grad_ipaf)
+
+  list(
+    lambda = lambda,
+    S = S,
+    I = I,
+    grad_lambda = grad_lambda,
+    grad_S = grad_S,
+    grad_I = grad_I,
+    ipaf0 = ipaf0,
+    var_ipaf0 = var_ipaf0,
+    ipaf = ipaf,
+    var_ipaf = var_ipaf
+  )
 }
