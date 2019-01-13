@@ -65,7 +65,7 @@ test_that("I gradients, single-person", {
 
 test_that("I gradients, single-period", {
   z <- diag(3) # 3x3 identity matrix
-  id <- rep(3, 1)
+  id <- gl(3, 1)
   period <- gl(1, 3)
   dt <- c(1)
 
@@ -78,14 +78,13 @@ test_that("I gradients, single-period", {
 
   stopifnot(all.equal(glambda, rpaf:::mpaf_grad_lambda(z, lambda)))
 
-  gS <- -S %o% lambda
-  gS[upper.tri(gS)] <- 0
+  gS <- - diag(S * lambda)
 
   expect_equal(gS, rpaf:::mpaf_grad_S(glambda, S, id, period, dt))
 
-  gdS <- apply(gS, 2, function(col) -diff(c(0, col)))
+  gdS <- -gS
 
-  expect_equal(gdS, rpaf:::mpaf_grad_I(gdS, id, period),
+  expect_equal(colMeans(gdS), rpaf:::mpaf_grad_I(gdS, id, period),
                check.attributes = FALSE)
 })
 
