@@ -26,14 +26,19 @@ mpaf_summary <- function(sr_formula, mpaf_data, modifications, covar_model,
     pd_spl <- paf_data_split(pafdat, pafdat$data[, group_vars, drop = FALSE])
     mpaf_groups <- lapply(pd_spl, mpaf_est_paf,
                           mpaf_fit = mpaf_fit, level = level)
+    names(mpaf_groups) <- names(pd_spl)
+
     mpaf_diffs <- utils::combn(mpaf_groups, 2, FUN = function(grp_lst)
       mpaf_est_diff(grp_lst[[1]], grp_lst[[2]], mpaf_fit$var),
       simplify = FALSE
     )
-
-    names(mpaf_groups) <- names(mpaf_diffs) <-
+    names(mpaf_diffs) <-
       utils::combn(names(pd_spl), 2, paste, collapse = " - ")
   }
 
-  c(mpaf_fit, mpaf_all, group_pafs = list(mpaf_groups), paf_diffs = list(mpaf_diffs))
+  retlist <- c(list(call = match.call()), mpaf_fit, mpaf_all,
+               group_pafs = list(mpaf_groups),
+               paf_diffs = list(mpaf_diffs))
+  class(retlist) <- "mpaf_summary"
+  retlist
 }

@@ -60,7 +60,8 @@ mpaf_gen_data <- function(
 
   # handle missing data
   df <- match.fun(na.action)(df)
-  mpaf$na.action <- na.action(df)
+  mpaf$nobs <- nrow(df)
+  mpaf$na.action <- stats::na.action(df)
 
   # time break information
   mpaf$breaks <- ft_breaks
