@@ -105,9 +105,10 @@ design_frames <- function(df, terms, modifications, xlev) {
 #' @param lsep character separator between a factor name and the level
 #' @param fsep character separator between two factors
 #'
-#' @return A named list of \code{\link{[dm]paf_data}} objects, with names
-#'   corresponding to the names of the list output by \code{split}. If a named
-#'   list was given in \code{INDICES}, then these names will be included.
+#' @return A named list of objects with class \code{dpaf_data} or
+#'     \code{mpaf_data}, with names corresponding to the names of the
+#'     list output by \code{split}. If a named list was given in
+#'     \code{INDICES}, then these names will be included.
 #' @export
 paf_data_split <- function(object, INDICES, lsep = ": ", fsep = ", ") {
   split_call <- match.call()
