@@ -9,7 +9,7 @@ mpaf_est_matrix <- function(sr_formula, mpaf_data, modifications,
 
 #' Estimate mortality PAFs
 #'
-#' @param mpaf_fit an object of class \code{mpaf_est_matrix}
+#' @param mpaf_fit an object of class \code{paf_est_matrix}
 #' @param newdata (not yet implemented) a new prevalence matrix, in some form
 #' @param level width of confidence interval, default 0.95
 #'

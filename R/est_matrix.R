@@ -31,11 +31,16 @@
 #'
 #'   \item{est_matrix_call}{the call to this function}
 #'
+#'   \item{modifications}{the list of modifications applied}
+#'
 #'   \item{survreg}{the survival regression object}
 #'
 #'   \item{coefficients}{the parameter estimates as in \code{survreg}}
 #'
 #'   \item{var}{the covariance matrix as in \code{survreg}}
+#'
+#'   \item{terms}{a \code{terms} object for the survival regression with
+#'   responses removed}
 #'
 #'   \item{HR}{the hazard ratios and their confidence intervals; see Warning}
 #'

@@ -1,7 +1,7 @@
 #' Calculate mortality PAF estimates, confidence intervals and groupwise
 #' differences
 #'
-#' @inheritParams mpaf_est_matrix
+#' @inheritParams est_matrix
 #' @param prevalence_data matrix of prevalences as class \code{mpaf_data}
 #' @param group_vars names of columns to group by in PAF difference estimations
 #' @param level width of confidence intervals, default 0.95
