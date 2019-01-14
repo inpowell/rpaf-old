@@ -195,7 +195,7 @@ mpaf_est_paf <- function(mpaf_fit, newdata, level = 0.95) {
   grad_I_0 <-      mpaf_grad_I(-grad_S,      ID, PERIOD)
   grad_I_0_star <- mpaf_grad_I(-grad_S_star, ID, PERIOD)
   dimnames(grad_I_0)[[1]] <- dimnames(grad_I_0_star)[[1]] <- paste0(
-    "(", mpaf_fit$breaks[1], ",", tail(mpaf_fit$breaks, -1), "]"
+    "(", mpaf_fit$breaks[1], ",", utils::tail(mpaf_fit$breaks, -1), "]"
   )
 
   grad_ipaf0 <- grad_I_0_star / I_0_star - grad_I_0 / I_0
