@@ -1,1 +1,3 @@
 example-disease-smoke	Show process to calculate disease PAFs for smoking.
+example-mortality-bp-bmi	Show process to calculate mortality PAFs for BMI range, grouping by blood pressure.
+example-mortality-smoke	Show process to calculate mortality PAFs for smoking.
