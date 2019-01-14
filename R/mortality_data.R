@@ -91,7 +91,8 @@ mpaf_gen_data <- function(
   # convert period column to factor
   ldf[[period_factor]] <- factor(
     ldf[[period_factor]],
-    labels = paste0("(", head(ft_breaks, -1), ",", tail(ft_breaks, -1), "]")
+    labels = paste0("(", utils::head(ft_breaks, -1), ",",
+                    utils::tail(ft_breaks, -1), "]")
   )
 
   mpaf$ID <- ldf[[id_var]]

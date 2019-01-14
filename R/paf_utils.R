@@ -87,9 +87,9 @@ name_by <- function(x, lsep = ": ", fsep = ", ") {
 #'   carrying predictor values
 #' @keywords internal
 design_frames <- function(df, terms, modifications, xlev) {
-  design <- stats::model.frame(terms, df, na.action = na.pass, xlev = xlev)
+  design <- stats::model.frame(terms, df, na.action = stats::na.pass, xlev = xlev)
   mdf <- apply_modifications(df, modifications)
-  modified <- stats::model.frame(terms, mdf, na.action = na.pass, xlev = xlev)
+  modified <- stats::model.frame(terms, mdf, na.action = stats::na.pass, xlev = xlev)
 
   list(design = design, modified = modified)
 }

@@ -82,13 +82,16 @@ mpaf_est_matrix <- function(sr_formula, mpaf_data, modifications,
     apply(vars, 1, paste, collapse = ":")
   }))
 
-  # show hazard ratios, with reference levels as NA
-  matrix_data$HR <- cbind(
-    "Hazard ratio" = exp(-matrix_data$coefficients)[params],
-    exp(-confint(matrix_data$survreg, parm = params, level = level))[,2:1]
+  # show hazard ratios, with reference levels as NA matrix_data$HR <-
+  cbind(
+      "Hazard ratio" = exp(-matrix_data$coefficients)[params],
+      exp(-stats::confint(matrix_data$survreg,
+                          parm = params,
+                          level = level))[,2:1]
   )
   dimnames(matrix_data$HR)[[1]] <- params
-  dimnames(matrix_data$HR)[[2]] <- dimnames(matrix_data$HR)[[2]][c(1,3,2)]
+  dimnames(matrix_data$HR)[[2]] <-
+  dimnames(matrix_data$HR)[[2]][c(1,3,2)]
 
   retlist <- c(mpaf_data, matrix_data,
                design_frames(mpaf_data$data, Terms, modifications,
@@ -165,7 +168,7 @@ mpaf_est_paf <- function(mpaf_fit, newdata, level = 0.95) {
   I_0 <-      mpaf_I(1-S,      PERIOD)
   I_0_star <- mpaf_I(1-S_star, PERIOD)
   names(I_0) <- names(I_0_star) <- paste0(
-    "(", mpaf_fit$breaks[1], ",", tail(mpaf_fit$breaks, -1), "]"
+    "(", mpaf_fit$breaks[1], ",", utils::tail(mpaf_fit$breaks, -1), "]"
   )
 
   # I_(t, t+dt]^(*)
@@ -253,6 +256,6 @@ mpaf_est_diff <- function(mpaf1, mpaf2, vv) {
     "PAF Diff" = dpaf,
     "SE(PAF Diff)" = se_dpaf,
     "Z value" = Z,
-    "Pr(>|Z|)" = 2 * pnorm(-abs(Z))
+    "Pr(>|Z|)" = 2 * stats::pnorm(-abs(Z))
   )
 }

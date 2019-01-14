@@ -181,8 +181,8 @@ dpaf <- function(disease_resp, death_resp, predictors, dpaf_data, ...) {
   model <- dpaf_data
   stopifnot(inherits(model, "dpaf_response"))
 
-  formula_d <- update(predictors, disease_resp)
-  formula_m <- update(predictors, death_resp)
+  formula_d <- stats::update(predictors, disease_resp)
+  formula_m <- stats::update(predictors, death_resp)
 
   model$call <- match.call()
 
