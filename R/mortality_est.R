@@ -26,14 +26,14 @@ mpaf_est_matrix <- function(sr_formula, mpaf_data, modifications,
 #'   difference calculations}
 #'
 #' @export
-mpaf_est_paf <- function(mpaf_fit, newdata, level = 0.95) {
+mpaf_est_paf <- function(mpaf_fit, mpaf_data, newdata, level = 0.95) {
   if (!missing(newdata)) {
     stopifnot(inherits(newdata, "mpaf_data"))
-    if (!identical(mpaf_fit$data_call$ft_breaks, newdata$data_call$ft_breaks))
+    if (!identical(mpaf_data$data_call$ft_breaks, newdata$data_call$ft_breaks))
       stop("Original periods and new periods are incompatible")
-    if (!identical(mpaf_fit$data_call$variables, newdata$data_call$variables))
+    if (!identical(mpaf_data$data_call$variables, newdata$data_call$variables))
       stop("Original variables and new variables are different")
-    if (!identical(mpaf_fit$data_call$period_factor,
+    if (!identical(mpaf_data$data_call$period_factor,
                    newdata$data_call$period_factor))
       stop(paste("Name of period factor columns are not equal.",
                  "Ensure mpaf_gen_data is called with identical",
@@ -43,7 +43,7 @@ mpaf_est_paf <- function(mpaf_fit, newdata, level = 0.95) {
   tm <- mpaf_fit$terms
   cf <- mpaf_fit$coefficients
   vv <- mpaf_fit$var
-  dt <- diff(mpaf_fit$breaks)
+  dt <- diff(mpaf_data$breaks)
 
   # Point estimate calculations ---------------------------------------------
 
@@ -74,7 +74,7 @@ mpaf_est_paf <- function(mpaf_fit, newdata, level = 0.95) {
   I_0 <-      mpaf_I(1-S,      PERIOD)
   I_0_star <- mpaf_I(1-S_star, PERIOD)
   names(I_0) <- names(I_0_star) <- paste0(
-    "(", mpaf_fit$breaks[1], ",", utils::tail(mpaf_fit$breaks, -1), "]"
+    "(", mpaf_data$breaks[1], ",", utils::tail(mpaf_data$breaks, -1), "]"
   )
 
   # I_(t, t+dt]^(*)
@@ -101,7 +101,7 @@ mpaf_est_paf <- function(mpaf_fit, newdata, level = 0.95) {
   grad_I_0 <-      mpaf_grad_I(-grad_S,      ID, PERIOD)
   grad_I_0_star <- mpaf_grad_I(-grad_S_star, ID, PERIOD)
   dimnames(grad_I_0)[[1]] <- dimnames(grad_I_0_star)[[1]] <- paste0(
-    "(", mpaf_fit$breaks[1], ",", utils::tail(mpaf_fit$breaks, -1), "]"
+    "(", mpaf_data$breaks[1], ",", utils::tail(mpaf_data$breaks, -1), "]"
   )
 
   grad_ipaf0 <- grad_I_0_star / I_0_star - grad_I_0 / I_0

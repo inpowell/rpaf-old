@@ -97,7 +97,7 @@ est_matrix <- function(sr_formula, paf_response, modifications,
   dimnames(matrix_data$HR)[[1]] <- params
   dimnames(matrix_data$HR)[[2]] <- dimnames(matrix_data$HR)[[2]][c(1,3,2)]
 
-  retlist <- c(paf_response, matrix_data,
+  retlist <- c(matrix_data,
                design_frames(paf_response$data, Terms, modifications,
                              matrix_data$survreg$xlevels))
   class(retlist) <- "paf_est_matrix"
