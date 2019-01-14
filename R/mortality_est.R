@@ -52,8 +52,8 @@ mpaf_est_paf <- function(mpaf_fit, mpaf_data, newdata, level = 0.95) {
   if (missing(newdata)) {
     z <-      stats::model.matrix(tm, mpaf_fit$design)
     z_star <- stats::model.matrix(tm, mpaf_fit$modified)
-    ID <- mpaf_fit$ID
-    PERIOD <- mpaf_fit$PERIOD
+    ID <- mpaf_data$ID
+    PERIOD <- mpaf_data$PERIOD
   } else {
     newframes <- design_frames(newdata$data, tm, mpaf_fit$modifications,
                                mpaf_fit$survreg$xlevels)

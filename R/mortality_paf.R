@@ -15,9 +15,10 @@ mpaf_summary <- function(sr_formula, mpaf_data, modifications, covar_model,
                               covar_model, level = level, ...)
 
   if (missing(prevalence_data))
-    mpaf_all <- mpaf_est_paf(mpaf_fit, level = level)
+    mpaf_all <- mpaf_est_paf(mpaf_fit, mpaf_data, level = level)
   else
-    mpaf_all <- mpaf_est_paf(mpaf_fit, prevalence_data, level = level)
+    mpaf_all <- mpaf_est_paf(mpaf_fit, mpaf_data, prevalence_data,
+                             level = level)
 
   mpaf_groups <- NULL
   mpaf_diffs <- NULL
