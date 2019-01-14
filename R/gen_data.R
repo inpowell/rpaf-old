@@ -147,3 +147,22 @@ gen_data <- function(
   class(paf_data) <- type
   paf_data
 }
+
+#' @export
+#' @rdname gen_data
+mpaf_gen_data <- function(indata, id_var, ft_breaks, death_ind, death_time,
+              variables = character(0), na.action = getOption("na.action"),
+              period_factor = "f_period", time_var = "f_end") {
+  .Deprecated("gen_data")
+  gen_data(
+    indata = indata,
+    id_var = id_var,
+    ft_breaks = ft_breaks,
+    death_ind = death_ind,
+    death_time = death_time,
+    variables = variables,
+    na.action = na.action,
+    period_factor = period_factor,
+    time_var = time_var
+  )
+}
