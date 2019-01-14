@@ -82,8 +82,8 @@ mpaf_est_matrix <- function(sr_formula, mpaf_data, modifications,
     apply(vars, 1, paste, collapse = ":")
   }))
 
-  # show hazard ratios, with reference levels as NA matrix_data$HR <-
-  cbind(
+  # show hazard ratios, with reference levels as NA
+  matrix_data$HR <- cbind(
       "Hazard ratio" = exp(-matrix_data$coefficients)[params],
       exp(-stats::confint(matrix_data$survreg,
                           parm = params,
