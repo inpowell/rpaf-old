@@ -74,6 +74,8 @@ print.mpaf_summary <- function(x, ..., coef_regex = "",
     }, dpaf = x$paf_diffs, nm = names(x$paf_diffs))
     cat(vsep)
   }
+  cat('\n')
+  invisible(x)
 }
 
 #' @export
@@ -167,4 +169,6 @@ print.dpaf_summary <- function(x, ..., coef_regex = "",
     }, dpaf = x$paf_diffs, nm = names(x$paf_diffs))
     cat(vsep)
   }
+  cat('\n')
+  invisible(x)
 }
