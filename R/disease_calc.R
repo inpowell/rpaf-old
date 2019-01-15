@@ -76,3 +76,127 @@ dpaf_I <- function(lambda_l, dSp, PERIOD) {
     PERIOD, mean
   ))
 }
+
+#' Calculate hazard gradients for dpaf study
+#'
+#' @param z model matrix
+#' @param cf_l named list of vectors \eqn{\gamma^D, \gamma^M} of parameter
+#'   estimates
+#'
+#' @return named list of hazard gradients (in matrix form)
+#' @keywords internal
+dpaf_grad_lambda <- function(z, cf_l) {
+  lapply(cf_l, `*`, z) # sic elementwise multiplication
+}
+
+#' Calculate gradient of survivals for mpaf study
+#'
+#' @param grad_lambda_l named list of matrices of hazard gradients
+#' @param S_l named list of vector of survivals
+#' @param ID corresponding vector of IDs
+#' @param PERIOD corresponding vector of periods
+#' @param dt delta-times -- length of each period
+#'
+#' @return names list of matrix of gradients, where each row in each list item
+#'   is the gradient of the corresponding survival
+#' @keywords internal
+dpaf_grad_S <- function(grad_lambda_l, S_l, ID, PERIOD, dt) {
+  if (any(tapply(PERIOD, ID, is.unsorted)))
+    stop("Periods must be in ascending order for each ID to calculate survival")
+
+  grad_lambda_sum <- lapply(grad_lambda_l, function(grad_lambda)
+    apply(grad_lambda, 2, function(gl_..r)
+      stats::ave(gl_..r, ID, FUN = function(gl_i.r) cumsum(gl_i.r * dt))
+  ))
+
+  lapply(mapply(`*`, S_l, grad_lambda_sum, SIMPLIFY = FALSE), `-`)
+}
+
+#' Calculate gradient of survival products
+#'
+#' @param grad_S_l named list of survival gradient matrices
+#' @param Sp vector of survival products
+#' @param ID corresponding vector of IDs
+#' @param PERIOD corresponding vector of PERIODs
+#'
+#' @return named list of survival product gradient matrices
+#' @keywords internal
+dpaf_grad_delta_Sp <- function(grad_S_l, Sp, ID, PERIOD) {
+  if (any(tapply(PERIOD, ID, is.unsorted)))
+    stop("Periods must be in ascending order for each ID to calculate survival")
+
+  # TODO check gradient vector calculus
+  # sic elementwise multiplication
+  grad_Sp_l <- lapply(grad_S_l, `*`, Sp)
+
+  # note gradient survival at time zero is zero
+  lapply(grad_Sp_l, function(grad_Sp)
+    apply(grad_Sp, 2, function(grad_Sp_..r)
+      stats::ave(grad_Sp_..r, ID,
+                 FUN = function(grad_Sp_i.r) -diff(c(0, grad_Sp_i.r))))
+  )
+}
+
+#' Calculate average/expected disease incidence \eqn{I} for dpaf study
+#'
+#' @param grad_lambda_l named list of hazard gradient matrices
+#' @param grad_dSp named list of survival product difference matrices
+#' @param lambda_l named list of hazards
+#' @param dSp vector of survival differences
+#' @param ID vector of corresponding IDs
+#' @param PERIOD vector of corresponding periods
+#'
+#' @return named vector of mortalities \eqn{I} (see Warning on names)
+#' @keywords internal
+dpaf_grad_I <- function(grad_lambda_l, grad_dSp_l, lambda_l, dSp, PERIOD) {
+  summands_d <- grad_lambda_l[["disease"]] *
+    lambda_l[["mortality"]] / do.call(`+`, lambda_l)^2 * dSp +
+    grad_dSp_l[["disease"]] * lambda_l[["disease"]] / do.call(`+`, lambda_l)
+
+  summands_m <- -grad_lambda_l[["mortality"]] *
+    lambda_l[["disease"]] / do.call(`+`, lambda_l)^2 * dSp +
+    grad_dSp_l[["mortality"]] * lambda_l[["disease"]] / do.call(`+`, lambda_l)
+
+  lapply(
+    list("disease" = summands_d, "mortality" = summands_m),
+    function(smnd) apply(smnd, 2, function(smnd_..r)
+      as.vector(tapply(smnd_..r, PERIOD, mean)))
+  )
+}
+
+#' Calculate gradients of \eqn{\log(1-PAF)} wrt disease and mortality
+#' coefficients
+#'
+#' @param gi_mod named list of gradients of \eqn{I^*}
+#' @param i_mod \eqn{I^*}
+#' @param gi_raw named list of gradients of \eqn{I}
+#' @param i_raw \eqn{I}
+#'
+#' @return a named list of gradient vectors of the iPAF
+#' @keywords internal
+dpaf_gipaf <- function(gi_mod, i_mod, gi_raw, i_raw) {
+  mapply(
+    `-`,
+    lapply(gi_mod, `/`, i_mod),
+    lapply(gi_raw, `/`, i_raw),
+    SIMPLIFY = FALSE
+  )
+}
+
+#' Calculate gradients of PAF wrt disease and mortality coefficients
+#'
+#' @param gi_mod named list of gradients of \eqn{I^*}
+#' @param i_mod \eqn{I^*}
+#' @param gi_raw named list of gradients of \eqn{I}
+#' @param i_raw \eqn{I}
+#'
+#' @return a named list of gradient vectors of the PAF
+#' @keywords internal
+dpaf_gpaf <- function(gi_mod, i_mod, gi_raw, i_raw) {
+  mapply(
+    function(gi_mod_x, gi_raw_x)
+      (gi_raw_x * i_mod - gi_mod_x * i_raw) / i_raw**2,
+    gi_mod, gi_raw,
+    SIMPLIFY = FALSE
+  )
+}
