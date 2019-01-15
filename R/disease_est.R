@@ -80,6 +80,10 @@ dpaf_est_paf <- function(fit_d, fit_m, paf_data, newdata, level = 0.95) {
   # I_(t, t+dt]^(*)
   I <-      dpaf_I(lambda,      dSp,      PERIOD)
   I_star <- dpaf_I(lambda_star, dSp_star, PERIOD)
+  names(I) <- names(I_star) <- paste0(
+    '(', utils::head(paf_data$breaks, -1), ',',
+    utils::tail(paf_data$breaks, -1), ']'
+  )
 
   # I_(0, t]^(*)
   I_0 <-      cumsum(I)
