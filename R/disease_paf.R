@@ -57,7 +57,9 @@ dpaf_summary <- function(disease_resp, death_resp, predictors, dpaf_data,
   names(fit_d) <- paste0(names(fit_d), "_d")
   names(fit_m) <- paste0(names(fit_m), "_m")
 
-  retlist <- c(list(call = match.call()), fit_d, fit_m, dpaf_all,
+  retlist <- c(list(call = match.call()),
+               list("nobs" = dpaf_data$nobs, "na.action" = dpaf_data$na.action),
+               fit_d, fit_m, dpaf_all,
                group_pafs = list(paf_groups),
                paf_diffs = list(paf_diffs))
   class(retlist) <- "dpaf_summary"
