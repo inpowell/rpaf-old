@@ -35,3 +35,12 @@ smoke_fitm <- est_matrix(survival::Surv(F_TIME, DEATH) ~
                          covar_model = c("SEX", "SMOKE"))
 
 smoke_paf <- dpaf_est_paf(smoke_fitd, smoke_fitm, smoke_data)
+
+smoke_summ <- dpaf_summary(
+  disease_resp = survival::Surv(F_TIME, DIAB) ~ .,
+  death_resp = survival::Surv(F_TIME, DEATH) ~ .,
+  predictors = ~ 0 + B_COHORT * F_PERIOD + SEX + SMOKE,
+  dpaf_data = smoke_data,
+  modifications = list(SMOKE = c("Never", "<30/day", ">=30/day")),
+  covar_model = c("SEX", "SMOKE")
+)
