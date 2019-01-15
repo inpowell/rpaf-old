@@ -137,3 +137,38 @@ dpaf_est_paf <- function(fit_d, fit_m, paf_data, newdata, level = 0.95) {
     grad_paf = grad_paf
   )
 }
+
+#' Estimate significance of groupwise differences in disease PAFs
+#'
+#' The elements of the output from this function should be able to be passed to
+#' \code{\link[stats]{printCoefmat}}.
+#'
+#' @param dpaf1,dpaf2 objects from \code{\link{dpaf_est_paf}} to be compared
+#' @param vv_l named list of the covariance matrices of parameters for disease and
+#'   mortality
+#'
+#' @return a matrix containing the PAF differences, their standard errors, Z
+#'   values and p values.
+#' @export
+dpaf_est_diff <- function(dpaf1, dpaf2, vv_l) {
+  paf_diff <- c(dpaf1$paf[,1] - dpaf2$paf[,1], dpaf1$paf0[,1] - dpaf2$paf0[,1])
+
+  gpaf_diff <- mapply(
+    rbind,
+    mapply(`-`, dpaf1$grad_paf, dpaf2$grad_paf, SIMPLIFY = FALSE),
+    mapply(`-`, dpaf1$grad_paf0, dpaf2$grad_paf0, SIMPLIFY = FALSE)
+    SIMPLIFY = FALSE
+  )
+
+  se_dpaf <- sqrt(
+    do.call(`+`, mapply(function(gpd, vv) diag(gpd %*% vv %*% t(gpd))))
+  )
+  Z <- dpaf / se_dpaf
+
+  cbind(
+    "PAF Diff" = dpaf,
+    "SE(PAF Diff)" = se_dpaf,
+    "Z value" = Z,
+    "Pr(>|Z|)" = 2 * stats::pnorm(-abs(Z))
+  )
+}
