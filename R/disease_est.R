@@ -23,14 +23,14 @@
 dpaf_est_paf <- function(fit_d, fit_m, paf_data, newdata, level = 0.95) {
   if (!missing(newdata)) {
     stopifnot(inherits(newdata, "paf_data"))
-    if (!identical(mpaf_data$data_call$ft_breaks, newdata$data_call$ft_breaks))
+    if (!identical(paf_data$data_call$ft_breaks, newdata$data_call$ft_breaks))
       stop("Original periods and new periods are incompatible")
-    if (!identical(mpaf_data$data_call$variables, newdata$data_call$variables))
+    if (!identical(paf_data$data_call$variables, newdata$data_call$variables))
       stop("Original variables and new variables are different")
-    if (!identical(mpaf_data$data_call$period_factor,
+    if (!identical(paf_data$data_call$period_factor,
                    newdata$data_call$period_factor))
       stop(paste("Name of period factor columns are not equal.",
-                 "Ensure mpaf_gen_data is called with identical",
+                 "Ensure gen_data is called with identical",
                  "period_factor arguments"))
   }
 
@@ -175,14 +175,15 @@ dpaf_est_diff <- function(dpaf1, dpaf2, vv_l) {
     SIMPLIFY = FALSE
   )
 
-  se_dpaf <- sqrt(
-    do.call(`+`, mapply(function(gpd, vv) diag(gpd %*% vv %*% t(gpd))))
+  se_paf_diff <- sqrt(
+    do.call(`+`, mapply(function(gpd, vv) diag(gpd %*% vv %*% t(gpd)),
+                        gpaf_diff, vv_l, SIMPLIFY = FALSE))
   )
-  Z <- dpaf / se_dpaf
+  Z <- paf_diff / se_paf_diff
 
   cbind(
-    "PAF Diff" = dpaf,
-    "SE(PAF Diff)" = se_dpaf,
+    "PAF Diff" = paf_diff,
+    "SE(PAF Diff)" = se_paf_diff,
     "Z value" = Z,
     "Pr(>|Z|)" = 2 * stats::pnorm(-abs(Z))
   )

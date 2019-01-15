@@ -13,7 +13,7 @@
 #'   \code{paf_data}
 #' @param group_vars names of columns to group by in PAF difference estimations
 #' @param level width of confidence intervals, default 0.95
-#' @param ... extra parameters to be passed to \code{\link{mpaf_est_matrix}}
+#' @param ... extra parameters to be passed to \code{\link{est_matrix}}
 #'
 #' @return a list of potentially interesting hazard ratio and PAF estimates
 #' @export
@@ -42,7 +42,9 @@ dpaf_summary <- function(disease_resp, death_resp, predictors, dpaf_data,
   if (!missing(group_vars)) {
     pafdat <- if (missing(prevalence_data)) dpaf_data else prevalence_data
     pd_spl <- paf_data_split(pafdat, pafdat$data[, group_vars, drop = FALSE])
-    paf_groups <- lapply(pd_spl, dpaf_est_paf, fit_d = fit_d, fit_m = fit_m,
+    paf_groups <- lapply(pd_spl, dpaf_est_paf,
+                         fit_d = fit_d, fit_m = fit_m,
+                         paf_data = dpaf_data,
                          level = level)
     names(paf_groups) <- names(pd_spl)
 
