@@ -7,7 +7,18 @@
 #' @param newdata new prevalences, as an object of class \code{paf_data}
 #' @param level width of confidence interval, default 0.95
 #'
-#' @return
+#' @return a list containing the following elements:
+#'
+#'   \item{paf, paf0}{the PAFs for disease over individual and cumulative
+#'   periods, respectively, with their confidence intervals as specified by the
+#'   \code{level} argument}
+#'
+#'   \item{se_ipaf, se_ipaf0}{the standard errors for \eqn{\log(1-PAF)}, as
+#'   above}
+#'
+#'   \item{grad_paf, grad_paf0}{the gradients of the PAFs as above, for
+#'   difference calculations}
+#'
 #' @export
 dpaf_est_paf <- function(fit_d, fit_m, paf_data, newdata, level = 0.95) {
   if (!missing(newdata)) {
@@ -156,7 +167,7 @@ dpaf_est_diff <- function(dpaf1, dpaf2, vv_l) {
   gpaf_diff <- mapply(
     rbind,
     mapply(`-`, dpaf1$grad_paf, dpaf2$grad_paf, SIMPLIFY = FALSE),
-    mapply(`-`, dpaf1$grad_paf0, dpaf2$grad_paf0, SIMPLIFY = FALSE)
+    mapply(`-`, dpaf1$grad_paf0, dpaf2$grad_paf0, SIMPLIFY = FALSE),
     SIMPLIFY = FALSE
   )
 

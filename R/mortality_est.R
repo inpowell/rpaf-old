@@ -15,7 +15,7 @@ mpaf_est_matrix <- function(sr_formula, mpaf_data, modifications,
 #' @param newdata new prevalences, as an object of class \code{paf_data}
 #' @param level width of confidence interval, default 0.95
 #'
-#' @return a list of class \code{mpaf} containing the following elements:
+#' @return a list containing the following elements:
 #'
 #'   \item{paf, paf0}{the mortality PAFs for individual and cumulative periods,
 #'   respectively, with their confidence intervals as specified by the
