@@ -97,18 +97,19 @@ design_frames <- function(df, terms, modifications, xlev) {
 #' Split PAF data into groups by a factor
 #'
 #' This function is a wrapper around R-base's \code{split} function designed for
-#' \code{mpaf_data} and \code{dpaf_data} structures.
+#' \code{paf_data} structures.
 #'
-#' @param object An object of class \code{mpaf_data} or \code{\link{dpaf_data}}.
+#' @param object An object of class \code{paf_data} (from
+#'   \code{\link{gen_data}}.
 #' @param INDICES A factor or list of factors that can be passed to
 #'   \code{\link{split}}. Can optionally be named if a list.
 #' @param lsep character separator between a factor name and the level
 #' @param fsep character separator between two factors
 #'
 #' @return A named list of objects with class \code{dpaf_data} or
-#'     \code{mpaf_data}, with names corresponding to the names of the
-#'     list output by \code{split}. If a named list was given in
-#'     \code{INDICES}, then these names will be included.
+#'   \code{mpaf_data}, with names corresponding to the names of the list output
+#'   by \code{split}. If a named list was given in \code{INDICES}, then these
+#'   names will be included.
 #' @export
 paf_data_split <- function(object, INDICES, lsep = ": ", fsep = ", ") {
   split_call <- match.call()

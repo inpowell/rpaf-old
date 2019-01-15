@@ -5,8 +5,14 @@
 #' and their standard errors, and hazard ratios with their confidence intervals.
 #' Note that hazard ratios reported as \code{NA} are reference levels.
 #'
-#' If \code{covar_model} is not specified, the "hazard ratios" reported include
-#' all first order terms.
+#' \code{modifications} should be a named list of scalars or
+#' vectors. Each name should correspond to a column in \code{df}. The
+#' first element in each vector should be the desired output value. If
+#' there are subsequent elements in the vector, these identify which
+#' values to convert from.
+#'
+#' If \code{covar_model} is not specified,
+#' the "hazard ratios" reported include all first order terms.
 #'
 #' @section Warnings:
 #'
@@ -27,7 +33,7 @@
 #' @param level width of the confidence intervals for hazard ratios, default
 #'   0.95.
 #'
-#' @return a list of type \code{mpaf_est_matrix} with the following items:
+#' @return a list of type \code{paf_est_matrix} with the following items:
 #'
 #'   \item{est_matrix_call}{the call to this function}
 #'

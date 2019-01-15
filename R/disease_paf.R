@@ -1,6 +1,15 @@
 #' Calculate mortality PAF estimates, confidence intervals and groupwise
 #' differences
 #'
+#'
+#'
+#' If \code{covar_model} is not specified,
+#' the "hazard ratios" reported include all first order terms.
+#'
+#' \code{modifications} should be a named list of scalars or vectors. Each name
+#' should correspond to a column in \code{df}. The first element in each vector
+#' should be the desired output value. If there are subsequent elements in the
+#' vector, these identify which values to convert from.
 #' @param disease_resp formula with response for disease regression (note RHS
 #'   should be \code{.})
 #' @param death_resp formula with response for mortality regression (note RHS
@@ -8,7 +17,8 @@
 #' @param predictors formula with RHS containing predictors for both survival
 #'   regressions (LHS should be empty)
 #' @param dpaf_data an object of class \code{dpaf_response}, from
-#'   \code{\link{dpaf_data}}
+#'   \code{\link{gen_data}}
+#' @inheritParams est_matrix
 #' @param prevalence_data optional matrix of external prevalences as class
 #'   \code{paf_data}
 #' @param group_vars names of columns to group by in PAF difference estimations
