@@ -18,12 +18,12 @@
 #'   \code{attr(terms(sr_formula), "term.labels")} can be used.
 #'
 #' @param sr_formula a formula to be passed to \code{\link[survival]{survreg}}
-#' @param mpaf_data a response object as output by \code{\link{mpaf_gen_data}}
+#' @param paf_response a response object as output by \code{\link{gen_data}}
 #' @param modifications a list of modifications to apply for PAF calculation;
 #'   see Details for more information
 #' @param covar_model an optional character vector describing variables of
 #'   interest for hazard ratio calculation
-#' @param ... extra parameters to be passed to \code{survreg} and \code{confint}
+#' @param ... extra parameters to be passed to \code{survreg}
 #' @param level width of the confidence intervals for hazard ratios, default
 #'   0.95.
 #'
