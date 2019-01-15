@@ -30,7 +30,7 @@ mpaf_est_matrix <- function(sr_formula, mpaf_data, modifications,
 #' @export
 mpaf_est_paf <- function(mpaf_fit, mpaf_data, newdata, level = 0.95) {
   if (!missing(newdata)) {
-    stopifnot(inherits(newdata, "mpaf_data"))
+    stopifnot(inherits(newdata, "paf_data"))
     if (!identical(mpaf_data$data_call$ft_breaks, newdata$data_call$ft_breaks))
       stop("Original periods and new periods are incompatible")
     if (!identical(mpaf_data$data_call$variables, newdata$data_call$variables))
