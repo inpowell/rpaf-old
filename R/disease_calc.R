@@ -7,7 +7,7 @@
 #' @return named list of hazards
 #' @keywords internal
 dpaf_lambda <- function(z, cf_l) {
-  lapply(cf_l, function(cf) as.vector(exp(z %*% -gamma)))
+  lapply(cf_l, function(cf) as.vector(exp(z %*% -cf)))
 }
 
 #' Calculate survivals for mpaf study
@@ -53,13 +53,14 @@ dpaf_delta_Sp <- function(Sp, ID, PERIOD) {
   stats::ave(Sp, ID, FUN = function(S_i.) -diff(c(1, S_i.)))
 }
 
-#' Calculate average/expected disease-free survival \eqn{I} for dpaf study
+#' Calculate average/expected disease incidence \eqn{I} for dpaf study
 #'
 #' @param lambda_l named list of hazards
-#' @param dSp vector of survival differences -- if \eqn{I} over time
-#'   \eqn{(0, a_j]} is desired, then \code{dS} should be \code{1-S}, but if
-#'   mortality over a period \eqn{(a_{j-1}, a_j]} is desired, then \code{dSp}
-#'   should be \eqn{\Delta{S}} as output by \code{\link{dpaf_delta_Sp}}.
+#' @param dSp vector of survival differences -- if expected disease incidence
+#'   over a period \eqn{(a_{j-1}, a_j]} is desired, then \code{dSp} should be
+#'   \eqn{\Delta{S}} as output by \code{\link{dpaf_delta_Sp}}. If expected
+#'   disease incidence over a period \eqn{(0, a_j]} is desired, then calculate
+#'   \eqn{I} as before and then take the sum.
 #' @param ID vector of corresponding IDs
 #' @param PERIOD vector of corresponding periods
 #'
@@ -69,10 +70,7 @@ dpaf_delta_Sp <- function(Sp, ID, PERIOD) {
 #'
 #' @return named vector of mortalities \eqn{I} (see Warning on names)
 #' @keywords internal
-dpaf_I <- function(lambda_l, dSp, ID, PERIOD) {
-  if (any(tapply(PERIOD, ID, is.unsorted)))
-    stop("Periods must be in ascending order for each ID to calculate I")
-
+dpaf_I <- function(lambda_l, dSp, PERIOD) {
   as.vector(tapply(
     lambda_l[["disease"]] / do.call(`+`, lambda_l) * dSp,
     PERIOD, mean

@@ -1,3 +1,14 @@
+#' Estimate disease PAFs
+#'
+#' @param fit_d the \code{est_matrix} object fitted to disease incidence
+#' @param fit_m the \code{est_matrix} object fitted to mortality
+#' @param paf_data an object of class \code{paf_data}, used for the
+#'   \code{\link{est_matrix}} call
+#' @param newdata new prevalences, as an object of class \code{paf_data}
+#' @param level width of confidence interval, default 0.95
+#'
+#' @return
+#' @export
 dpaf_est_paf <- function(fit_d, fit_m, paf_data, newdata, level = 0.95) {
   if (!missing(newdata)) {
     stopifnot(inherits(newdata, "paf_data"))
@@ -15,7 +26,7 @@ dpaf_est_paf <- function(fit_d, fit_m, paf_data, newdata, level = 0.95) {
   # ensure design frames are the same for each fit
   ## TEST this -- the correct answer may occur even if the following conditions
   ## don't hold (below is sufficient, but not necessary)
-  stopifnot(identical(fit_d$terms, fit_m$terms))
+  stopifnot(isTRUE(all.equal(fit_d$terms, fit_m$terms)))
   stopifnot(identical(fit_d$design, fit_m$design))
   stopifnot(identical(fit_d$modified, fit_m$modified))
   stopifnot(identical(fit_d$modifications, fit_m$modifications))
@@ -41,4 +52,31 @@ dpaf_est_paf <- function(fit_d, fit_m, paf_data, newdata, level = 0.95) {
     PERIOD <- newdata$PERIOD
   }
 
+  lambda <-      dpaf_lambda(z,      cf)
+  lambda_star <- dpaf_lambda(z_star, cf)
+
+  S <-      dpaf_S(lambda,      ID, PERIOD, dt)
+  S_star <- dpaf_S(lambda_star, ID, PERIOD, dt)
+
+  Sp <-      dpaf_Sp(S)
+  Sp_star <- dpaf_Sp(S_star)
+
+  dSp <-      dpaf_delta_Sp(Sp,      ID, PERIOD)
+  dSp_star <- dpaf_delta_Sp(Sp_star, ID, PERIOD)
+
+  # I_(t, t+dt]^(*)
+  I <-      dpaf_I(lambda,      dSp,      PERIOD)
+  I_star <- dpaf_I(lambda_star, dSp_star, PERIOD)
+
+  # I_(0, t]^(*)
+  I_0 <-      cumsum(I)
+  I_0_star <- cumsum(I_star)
+  names(I_0) <- names(I_0_star) <- paste0(
+    "(", paf_data$breaks[1], ",", utils::tail(paf_data$breaks, -1), "]"
+  )
+
+  ipaf0 <- log(I_0_star) - log(I_0)
+  ipaf <- log(I_star) - log(I)
+
+  list(ipaf = ipaf, ipaf0 = ipaf0)
 }
