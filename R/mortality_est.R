@@ -1,5 +1,12 @@
+#' Calculations for mortality PAFs (deprecated)
+#'
+#' This function is deprecated, see \code{\link{est_matrix}} for current usage.
+#'
+#' @param mpaf_data an object of class \code{mpaf_response} from
+#'   \code{\link{gen_data}}
+#' @inheritParams est_matrix
+#'
 #' @export
-#' @rdname est_matrix
 mpaf_est_matrix <- function(sr_formula, mpaf_data, modifications,
                             covar_model, level = 0.95, ...) {
   .Deprecated("est_matrix")

@@ -2,10 +2,11 @@
 #' differences
 #'
 #' @inheritParams est_matrix
+#' @param mpaf_data an object containing the response as in \code{\link{gen_data}}
 #' @param prevalence_data matrix of prevalences as class \code{mpaf_data}
 #' @param group_vars names of columns to group by in PAF difference estimations
 #' @param level width of confidence intervals, default 0.95
-#' @param ... extra parameters to be passed to \code{\link{mpaf_est_matrix}}
+#' @param ... extra parameters to be passed to \code{\link{est_matrix}}
 #'
 #' @return a list of potenitally interesting hazard ratio and PAF estimates
 #' @export
