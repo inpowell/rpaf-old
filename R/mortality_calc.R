@@ -74,7 +74,7 @@ mpaf_grad_lambda <- function(z, lambda) {
 
 #' Calculate gradient of survivals for mpaf study
 #'
-#' @param g_lambda matrix of hazard gradients
+#' @param grad_lambda matrix of hazard gradients
 #' @param S vector of survivals
 #' @param ID corresponding vector of IDs
 #' @param PERIOD corresponding vector of periods
