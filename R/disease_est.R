@@ -38,6 +38,8 @@ dpaf_est_paf <- function(fit_d, fit_m, paf_data, newdata, level = 0.95) {
                "mortality" = fit_m$var)
   dt <- diff(paf_data$breaks)
 
+  # Point estimate calculations ---------------------------------------------
+
   if (missing(newdata)) {
     z <-      stats::model.matrix(tm, fit_m$design)
     z_star <- stats::model.matrix(tm, fit_m$modified)
@@ -101,10 +103,37 @@ dpaf_est_paf <- function(fit_d, fit_m, paf_data, newdata, level = 0.95) {
   grad_ipaf <- dpaf_gipaf(grad_I_star, I_star, grad_I, I)
   grad_ipaf0 <- dpaf_gipaf(grad_I_0_star, I_0_star, grad_I_0, I_0)
 
+  grad_paf <- dpaf_gpaf(grad_I_star, I_star, grad_I, I)
+  grad_paf0 <- dpaf_gpaf(grad_I_0_star, I_0_star, grad_I_0, I_0)
+
   var_ipaf0 <- do.call(`+`, mapply(function(gipaf0, vv)
     gipaf0 %*% vv %*% t(gipaf0), grad_ipaf0, vv_l, SIMPLIFY = FALSE))
   var_ipaf <- do.call(`+`, mapply(function(gipaf, vv)
     gipaf %*% vv %*% t(gipaf), grad_ipaf, vv_l, SIMPLIFY = FALSE))
 
-  list(ipaf = ipaf, ipaf0 = ipaf0, var_ipaf = var_ipaf, var_ipaf0 = var_ipaf0)
+  # Standard error and confint calculations ---------------------------------
+
+  a <- (1 - level)/2
+  a <- c(a, 1 - a)
+
+  se_ipaf0 <- sqrt(diag(var_ipaf0))
+  ci0 <- ipaf0 + se_ipaf0 %o% stats::qnorm(1 - a)
+  colnames(ci0) <- paste(format(100*a, trim = TRUE, scientific = FALSE,
+                                digits = 3), "%")
+  paf0 <- -expm1(cbind("PAF" = ipaf0, ci0))
+
+  se_ipaf <- sqrt(diag(var_ipaf))
+  ci <- ipaf + se_ipaf %o% stats::qnorm(1 - a)
+  colnames(ci) <- paste(format(100*a, trim = TRUE, scientific = FALSE,
+                               digits = 3), "%")
+  paf <- -expm1(cbind("PAF" = ipaf, ci))
+
+  list(
+    paf0 = paf0,
+    paf = paf,
+    se_ipaf0 = se_ipaf0,
+    se_ipaf = se_ipaf,
+    grad_paf0 = grad_paf0,
+    grad_paf = grad_paf
+  )
 }
