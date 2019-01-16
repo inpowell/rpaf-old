@@ -44,50 +44,21 @@ smoke_summ <- mpaf_summary(
 smoke_summ
 ```
 
-Vignettes are long form documentation commonly included in packages. Because they are part of the distribution of the package, they need to be as compact as possible. The `html_vignette` output type provides a custom style sheet (and tweaks some options) to ensure that the resulting html is as small as possible. The `html_vignette` format:
+Here, one can see
+ - summary output of the survival regression performed by `survival::survreg`
+ - the size of the cohort and, if applicable, the number of observations removed
+ - hazard ratio estimates and their confidence intervals (where reference levels are reported as `NA`)
+ - a list of the modifications performed in the PAF calculations
+ - PAFs for mortality over various time periods (given in the row names)
 
-- Never uses retina figures
-- Has a smaller default figure size
-- Uses a custom CSS stylesheet instead of the default Twitter Bootstrap style
 
-## Vignette Info
-
-Note the various macros within the `vignette` section of the metadata block above. These are required in order to instruct R how to build the vignette. Note that you should change the `title` field and the `\VignetteIndexEntry` to match the title of your vignette.
-
-## Styles
-
-The `html_vignette` template includes a basic CSS theme. To override this theme you can specify your own CSS in the document metadata as follows:
-
-    output: 
-      rmarkdown::html_vignette:
-        css: mystyles.css
-
-## Figures
-
-The figure sizes have been customised so that you can easily put two images side-by-side. 
-
-```{r, fig.show='hold'}
-plot(1:10)
-plot(10:1)
+## Further information
+The `mpaf_summary` object contains more information than is reported. For example, it includes the standard errors of the reported PAFs (in transformed space, \(\log(1-\text{PAF})\)), and the design frames (both raw and modified). Specific output can be accessed as from any other list in R:
+```{r}
+smoke_summ$se_ipaf0
 ```
 
-You can enable figure captions by `fig_caption: yes` in YAML:
-
-    output:
-      rmarkdown::html_vignette:
-        fig_caption: yes
-
-Then you can use the chunk option `fig.cap = "Your figure caption."` in **knitr**.
-
-## More Examples
-
-You can write math expressions, e.g. $Y = X\beta + \epsilon$, footnotes^[A footnote here.], and tables, e.g. using `knitr::kable()`.
-
-```{r, echo=FALSE, results='asis'}
-knitr::kable(head(mtcars, 10))
+```{r results = 'asis'}
+knitr::kable(smoke_summ$design[c(33:34, 78:79, 167:168),])
+knitr::kable(smoke_summ$modified[c(33:34, 78:79, 167:168),])
 ```
-
-Also a quote using `>`:
-
-> "He who gives up [code] safety for [code] speed deserves neither."
-([via](https://twitter.com/hadleywickham/status/504368538874703872))
