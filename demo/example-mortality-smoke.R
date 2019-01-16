@@ -1,5 +1,5 @@
 mpaf_smoke <- gen_data(minifhs, "ID", c(0,5,10,15,17), "DEATH", "DEATH_FT",
-                            c("SEX", "SMOKE", "B_COHORT"))
+                       variables = c("SEX", "SMOKE", "B_COHORT"))
 summary_smoke <- mpaf_summary(
   survival::Surv(f_end, DEATH) ~ B_COHORT * f_period + SEX + SMOKE,
   mpaf_data = mpaf_smoke,
