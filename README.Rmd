@@ -38,8 +38,13 @@ Basic calculation of PAFs can be achieved using the `mpaf_summary` and `dpaf_sum
 
 ```{r results = 'asis'}
 library(rpaf)
-smoke_data <- gen_data(minifhs, "ID", c(0,5,10,15,17), "DEATH", "DEATH_FT", 
-                       variables = c("B_COHORT", "SEX", "SMOKE"))
+smoke_data <- gen_data(
+  indata = minifhs, 
+  id_var = "ID",
+  ft_breaks = c(0,5,10,15,17),
+  death_ind = "DEATH", death_time = "DEATH_FT",
+  variables = c("B_COHORT", "SEX", "SMOKE")
+)
 smoke_summary <- mpaf_summary(
   survival::Surv(f_end, DEATH) ~ B_COHORT * f_period + SEX + SMOKE,
   mpaf_data = smoke_data, 
@@ -50,6 +55,29 @@ smoke_summary <- mpaf_summary(
 knitr::kable(rbind(smoke_summary$paf, smoke_summary$paf0), digits = 4)
 ```
 
+The process to calculate a disease PAF is similar, though the function calls vary slightly. Here we want to see the PAF for diabetes incidence if everyone in the study who has a high BMI (that is, above 25.0 kg/m^2) is instead modified to have a normal or low BMI:
+```{r results = 'asis'}
+bmi_data <- gen_data(
+  indata = minifhs,
+  id_var = "ID", ft_breaks = c(0,5,10,15,17), 
+  death_ind = "DEATH", death_time = "DEATH_FT",
+  disease_ind = "DIAB", disease_time = "DIAB_FT", 
+  variables = c("B_COHORT", "SEX", "BMI_2")
+)
+
+bmi_summary <- dpaf_summary(
+  disease_resp = survival::Surv(f_end, DIAB) ~ .,
+  death_resp = survival::Surv(f_end, DEATH) ~ .,
+  predictors = ~ B_COHORT * f_period + SEX + BMI_2,
+  dpaf_data = bmi_data,
+  modifications = list(BMI_2 = "<25.0"), 
+  covar_model = c("SEX", "BMI_2")
+)
+
+knitr::kable(rbind(bmi_summary$paf, bmi_summary$paf0), digits = 4)
+```
+
+Note that in both these cases, the period and follow-up time variables have been automatically named as `f_period` and `f_end` respectively. These names can be chosen in the call to `gen_data`.
 
 ## References
 - Laaksonen, M.A., Virtala, E., Knekt, P., Oja, H. and Härkänen, T., 2011. SAS macros for calculation of population attributable fraction in a cohort study design. *J Stat Softw*, 43(7), pp.1-25.

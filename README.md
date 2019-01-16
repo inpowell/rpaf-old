@@ -29,8 +29,13 @@ Basic calculation of PAFs can be achieved using the `mpaf_summary` and `dpaf_sum
 
 ``` r
 library(rpaf)
-smoke_data <- gen_data(minifhs, "ID", c(0,5,10,15,17), "DEATH", "DEATH_FT", 
-                       variables = c("B_COHORT", "SEX", "SMOKE"))
+smoke_data <- gen_data(
+  indata = minifhs, 
+  id_var = "ID",
+  ft_breaks = c(0,5,10,15,17),
+  death_ind = "DEATH", death_time = "DEATH_FT",
+  variables = c("B_COHORT", "SEX", "SMOKE")
+)
 smoke_summary <- mpaf_summary(
   survival::Surv(f_end, DEATH) ~ B_COHORT * f_period + SEX + SMOKE,
   mpaf_data = smoke_data, 
@@ -51,6 +56,42 @@ knitr::kable(rbind(smoke_summary$paf, smoke_summary$paf0), digits = 4)
 | (0,10\]  |  0.1302|  0.1000|  0.1593|
 | (0,15\]  |  0.1117|  0.0862|  0.1365|
 | (0,17\]  |  0.1066|  0.0823|  0.1304|
+
+The process to calculate a disease PAF is similar, though the function calls vary slightly. Here we want to see the PAF for diabetes incidence if everyone in the study who has a high BMI (that is, above 25.0 kg/m^2) is instead modified to have a normal or low BMI:
+
+``` r
+bmi_data <- gen_data(
+  indata = minifhs,
+  id_var = "ID", ft_breaks = c(0,5,10,15,17), 
+  death_ind = "DEATH", death_time = "DEATH_FT",
+  disease_ind = "DIAB", disease_time = "DIAB_FT", 
+  variables = c("B_COHORT", "SEX", "BMI_2")
+)
+
+bmi_summary <- dpaf_summary(
+  disease_resp = survival::Surv(f_end, DIAB) ~ .,
+  death_resp = survival::Surv(f_end, DEATH) ~ .,
+  predictors = ~ B_COHORT * f_period + SEX + BMI_2,
+  dpaf_data = bmi_data,
+  modifications = list(BMI_2 = "<25.0"), 
+  covar_model = c("SEX", "BMI_2")
+)
+
+knitr::kable(rbind(bmi_summary$paf, bmi_summary$paf0), digits = 4)
+```
+
+|          |     PAF|   2.5 %|  97.5 %|
+|----------|-------:|-------:|-------:|
+| (0,5\]   |  0.6811|  0.5490|  0.7745|
+| (5,10\]  |  0.6801|  0.5491|  0.7731|
+| (10,15\] |  0.6802|  0.5497|  0.7728|
+| (15,17\] |  0.6795|  0.5476|  0.7729|
+| (0,5\]   |  0.6811|  0.5490|  0.7745|
+| (0,10\]  |  0.6804|  0.5492|  0.7735|
+| (0,15\]  |  0.6803|  0.5495|  0.7732|
+| (0,17\]  |  0.6803|  0.5496|  0.7730|
+
+Note that in both these cases, the period and follow-up time variables have been automatically named as `f_period` and `f_end` respectively. These names can be chosen in the call to `gen_data`.
 
 References
 ----------
