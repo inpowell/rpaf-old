@@ -6,7 +6,7 @@ Authors@R: person("Ian", "Powell", email = "i.powell@student.unsw.edu.au",
     role = c("cre", "aut"))
 Description: This package provides methods for calculating PAFs for incidence of 
     disease and/or mortality from cohort study data.
-License: file LICENSE
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.1.1
