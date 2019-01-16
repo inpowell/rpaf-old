@@ -5,5 +5,4 @@ vignettes/*_cache/
 .Rhistory
 ..Rcheck
 loose-scripts
-man
-NAMESPACE
+rpaf.Rproj
