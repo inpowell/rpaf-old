@@ -39,6 +39,7 @@ mpaf_summary <- function(sr_formula, mpaf_data, modifications, covar_model,
   }
 
   retlist <- c(list(call = match.call()), mpaf_fit, mpaf_all,
+               list("nobs" = mpaf_data$nobs, "na.action" = mpaf_data$na.action),
                group_pafs = list(mpaf_groups),
                paf_diffs = list(mpaf_diffs))
   class(retlist) <- "mpaf_summary"
