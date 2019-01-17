@@ -1,7 +1,7 @@
 Package: rpaf
 Type: Package
 Title: Calculate Population Attributable Fractions for Cohort Studies
-Version: 0.3.0
+Version: 0.3.1
 Authors@R: person("Ian", "Powell", email = "i.powell@student.unsw.edu.au",
     role = c("cre", "aut"))
 Description: This package provides methods for calculating PAFs for incidence of 
