@@ -176,6 +176,8 @@ dpaf_est_paf <- function(fit_d, fit_m, paf_data, newdata, level = 0.95) {
   list(
     paf0 = paf0,
     paf = paf,
+    incidence0 = I_0, incidence0_star = I_0_star,
+    incidence = I, incidence_star = I_star,
     se_ipaf0 = se_ipaf0,
     se_ipaf = se_ipaf,
     grad_paf0 = grad_paf0,
