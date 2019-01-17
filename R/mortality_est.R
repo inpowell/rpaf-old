@@ -82,9 +82,10 @@ mpaf_est_paf <- function(mpaf_fit, mpaf_data, newdata, level = 0.95) {
   # I_(0, t]^(*)
   I_0 <-      mpaf_I(1-S,      PERIOD)
   I_0_star <- mpaf_I(1-S_star, PERIOD)
-  names(I_0) <- names(I_0_star) <- paste0(
-    "(", mpaf_data$breaks[1], ",", utils::tail(mpaf_data$breaks, -1), "]"
-  )
+  if (length(levels(PERIOD)) > 1)
+    names(I_0) <- names(I_0_star) <- paste0(
+      "(", mpaf_data$breaks[1], ",", utils::tail(mpaf_data$breaks, -1), "]"
+    )
 
   # I_(t, t+dt]^(*)
   I <-      mpaf_I(dS,      PERIOD)
@@ -109,9 +110,10 @@ mpaf_est_paf <- function(mpaf_fit, mpaf_data, newdata, level = 0.95) {
 
   grad_I_0 <-      mpaf_grad_I(-grad_S,      ID, PERIOD)
   grad_I_0_star <- mpaf_grad_I(-grad_S_star, ID, PERIOD)
-  dimnames(grad_I_0)[[1]] <- dimnames(grad_I_0_star)[[1]] <- paste0(
-    "(", mpaf_data$breaks[1], ",", utils::tail(mpaf_data$breaks, -1), "]"
-  )
+  if (length(levels(PERIOD)) > 1)
+    dimnames(grad_I_0)[[1]] <- dimnames(grad_I_0_star)[[1]] <- paste0(
+      "(", mpaf_data$breaks[1], ",", utils::tail(mpaf_data$breaks, -1), "]"
+    )
 
   grad_ipaf0 <- grad_I_0_star / I_0_star - grad_I_0 / I_0
   grad_ipaf <- grad_I_star / I_star - grad_I / I

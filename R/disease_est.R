@@ -80,17 +80,19 @@ dpaf_est_paf <- function(fit_d, fit_m, paf_data, newdata, level = 0.95) {
   # I_(t, t+dt]^(*)
   I <-      dpaf_I(lambda,      dSp,      PERIOD)
   I_star <- dpaf_I(lambda_star, dSp_star, PERIOD)
-  names(I) <- names(I_star) <- paste0(
-    '(', utils::head(paf_data$breaks, -1), ',',
-    utils::tail(paf_data$breaks, -1), ']'
-  )
+  if (length(levels(PERIOD)) > 1)
+    names(I) <- names(I_star) <- paste0(
+      '(', utils::head(paf_data$breaks, -1), ',',
+      utils::tail(paf_data$breaks, -1), ']'
+    )
 
   # I_(0, t]^(*)
   I_0 <-      cumsum(I)
   I_0_star <- cumsum(I_star)
-  names(I_0) <- names(I_0_star) <- paste0(
-    "(", paf_data$breaks[1], ",", utils::tail(paf_data$breaks, -1), "]"
-  )
+  if (length(levels(PERIOD)) > 1)
+    names(I_0) <- names(I_0_star) <- paste0(
+      "(", paf_data$breaks[1], ",", utils::tail(paf_data$breaks, -1), "]"
+    )
 
   ipaf0 <- log(I_0_star) - log(I_0)
   ipaf <- log(I_star) - log(I)
