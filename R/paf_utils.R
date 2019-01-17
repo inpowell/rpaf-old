@@ -136,3 +136,18 @@ paf_data_split <- function(object, INDICES, lsep = ": ", fsep = ", ") {
     ret
   }, IDs, PERIODs, data, SIMPLIFY = FALSE)
 }
+
+
+# Validity testing --------------------------------------------------------
+
+#' Test if period factor is internally sorted by ID
+#'
+#' @param ID vector of individuals' ID numbers
+#' @param PERIOD factor of corresponding time periods
+#'
+#' @return \code{TRUE} if period unsorted (should raise error), \code{FALSE}
+#'   otherwise
+#' @keywords internal
+is_period_unsorted <- function(ID, PERIOD) {
+  any(tapply(PERIOD, ID, is.unsorted))
+}

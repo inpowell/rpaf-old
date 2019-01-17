@@ -11,6 +11,8 @@ mpaf_lambda <- function(z, cf) {
 
 #' Calculate survivals for mpaf study
 #'
+#' Assumes arguments are sorted -- check with \code{\link{is_period_unsorted}}.
+#'
 #' @param lambda vector of hazards corresponding to \code{ID}s and
 #'   \code{PERIOD}s
 #' @param ID vector of IDs
@@ -20,15 +22,12 @@ mpaf_lambda <- function(z, cf) {
 #' @return named matrix of survivals
 #' @keywords internal
 mpaf_S <- function(lambda, ID, PERIOD, dt) {
-  if (any(tapply(PERIOD, ID, is.unsorted)))
-    stop("Periods must be in ascending order for each ID to calculate survival")
-
   exp(-stats::ave(lambda, ID, FUN = function(lda) cumsum(dt * lda)))
 }
 
 #' Calculate survival differences for mpaf study
 #'
-#' Assumes arguments are sorted as in \code{\link{mpaf_S}}.
+#' Assumes arguments are sorted -- check with \code{\link{is_period_unsorted}}.
 #'
 #' @param S vector of survivals
 #' @param ID vector of corresponding IDs
@@ -74,7 +73,7 @@ mpaf_grad_lambda <- function(z, lambda) {
 
 #' Calculate gradient of survivals for mpaf study
 #'
-#' Assumes arguments are sorted as in \code{\link{mpaf_S}}.
+#' Assumes arguments are sorted -- check with \code{\link{is_period_unsorted}}.
 #'
 #' @param grad_lambda matrix of hazard gradients
 #' @param S vector of survivals
@@ -95,7 +94,7 @@ mpaf_grad_S <- function(grad_lambda, S, ID, PERIOD, dt) {
 
 #' Calculate differences of gradient of survivals for mpaf study
 #'
-#' Assumes arguments are sorted as in \code{\link{mpaf_S}}.
+#' Assumes arguments are sorted -- check with \code{\link{is_period_unsorted}}.
 #'
 #' @param grad_S matrix of survival gradients
 #' @param ID corresponding vector of IDs

@@ -12,6 +12,8 @@ dpaf_lambda <- function(z, cf_l) {
 
 #' Calculate survivals for mpaf study
 #'
+#' Assumes arguments are sorted -- check with \code{\link{is_period_unsorted}}.
+#'
 #' @param lambda_l named list of vectors of hazards corresponding to \code{ID}s
 #'   and \code{PERIOD}s
 #' @param ID vector of IDs
@@ -21,9 +23,6 @@ dpaf_lambda <- function(z, cf_l) {
 #' @return named list of survivals
 #' @keywords internal
 dpaf_S <- function(lambda_l, ID, PERIOD, dt) {
-  if (any(tapply(PERIOD, ID, is.unsorted)))
-    stop("Periods must be in ascending order for each ID to calculate survival")
-
   lapply(lambda_l, function(lambda)
     exp(-stats::ave(lambda, ID, FUN = function(lda) cumsum(dt * lda))))
 }
@@ -40,7 +39,7 @@ dpaf_Sp <- function(S_l) {
 
 #' Calculate survival differences for dpaf study
 #'
-#' Assumes arguments are sorted as in \code{\link{dpaf_S}}.
+#' Assumes arguments are sorted -- check with \code{\link{is_period_unsorted}}.
 #'
 #' @param Sp vector of survival products
 #' @param ID vector of corresponding IDs
@@ -91,7 +90,7 @@ dpaf_grad_lambda <- function(z, cf_l) {
 
 #' Calculate gradient of survivals for mpaf study
 #'
-#' Assumes arguments are sorted as in \code{\link{dpaf_S}}.
+#' Assumes arguments are sorted -- check with \code{\link{is_period_unsorted}}.
 #'
 #' @param grad_lambda_l named list of matrices of hazard gradients
 #' @param S_l named list of vector of survivals
@@ -113,7 +112,7 @@ dpaf_grad_S <- function(grad_lambda_l, S_l, ID, PERIOD, dt) {
 
 #' Calculate gradient of survival products
 #'
-#' Assumes arguments are sorted as in \code{\link{dpaf_S}}.
+#' Assumes arguments are sorted -- check with \code{\link{is_period_unsorted}}.
 #'
 #' @param grad_S_l named list of survival gradient matrices
 #' @param Sp vector of survival products
