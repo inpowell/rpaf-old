@@ -40,6 +40,8 @@ dpaf_Sp <- function(S_l) {
 
 #' Calculate survival differences for dpaf study
 #'
+#' Assumes arguments are sorted as in \code{\link{dpaf_S}}.
+#'
 #' @param Sp vector of survival products
 #' @param ID vector of corresponding IDs
 #' @param PERIOD vector of corresponding periods
@@ -47,8 +49,6 @@ dpaf_Sp <- function(S_l) {
 #' @return vector of survival product differences over the course of each period
 #' @keywords internal
 dpaf_delta_Sp <- function(Sp, ID, PERIOD) {
-  if (any(tapply(PERIOD, ID, is.unsorted)))
-    stop("Periods must be in ascending order for each ID to calculate survival")
   # note that survival at time zero is 1
   stats::ave(Sp, ID, FUN = function(S_i.) -diff(c(1, S_i.)))
 }
@@ -91,6 +91,8 @@ dpaf_grad_lambda <- function(z, cf_l) {
 
 #' Calculate gradient of survivals for mpaf study
 #'
+#' Assumes arguments are sorted as in \code{\link{dpaf_S}}.
+#'
 #' @param grad_lambda_l named list of matrices of hazard gradients
 #' @param S_l named list of vector of survivals
 #' @param ID corresponding vector of IDs
@@ -101,9 +103,6 @@ dpaf_grad_lambda <- function(z, cf_l) {
 #'   is the gradient of the corresponding survival
 #' @keywords internal
 dpaf_grad_S <- function(grad_lambda_l, S_l, ID, PERIOD, dt) {
-  if (any(tapply(PERIOD, ID, is.unsorted)))
-    stop("Periods must be in ascending order for each ID to calculate survival")
-
   grad_lambda_sum <- lapply(grad_lambda_l, function(grad_lambda)
     apply(grad_lambda, 2, function(gl_..r)
       stats::ave(gl_..r, ID, FUN = function(gl_i.r) cumsum(gl_i.r * dt))
@@ -114,6 +113,8 @@ dpaf_grad_S <- function(grad_lambda_l, S_l, ID, PERIOD, dt) {
 
 #' Calculate gradient of survival products
 #'
+#' Assumes arguments are sorted as in \code{\link{dpaf_S}}.
+#'
 #' @param grad_S_l named list of survival gradient matrices
 #' @param Sp vector of survival products
 #' @param ID corresponding vector of IDs
@@ -122,9 +123,6 @@ dpaf_grad_S <- function(grad_lambda_l, S_l, ID, PERIOD, dt) {
 #' @return named list of survival product gradient matrices
 #' @keywords internal
 dpaf_grad_delta_Sp <- function(grad_S_l, Sp, ID, PERIOD) {
-  if (any(tapply(PERIOD, ID, is.unsorted)))
-    stop("Periods must be in ascending order for each ID to calculate survival")
-
   # TODO check gradient vector calculus
   # sic elementwise multiplication
   grad_Sp_l <- lapply(grad_S_l, `*`, Sp)

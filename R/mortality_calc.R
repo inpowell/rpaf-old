@@ -28,6 +28,8 @@ mpaf_S <- function(lambda, ID, PERIOD, dt) {
 
 #' Calculate survival differences for mpaf study
 #'
+#' Assumes arguments are sorted as in \code{\link{mpaf_S}}.
+#'
 #' @param S vector of survivals
 #' @param ID vector of corresponding IDs
 #' @param PERIOD vector of corresponding periods
@@ -35,8 +37,6 @@ mpaf_S <- function(lambda, ID, PERIOD, dt) {
 #' @return vector of survival differences over the course of each period
 #' @keywords internal
 mpaf_delta_S <- function(S, ID, PERIOD) {
-  if (any(tapply(PERIOD, ID, is.unsorted)))
-    stop("Periods must be in ascending order for each ID to calculate survival")
   # note that survival at time zero is 1
   stats::ave(S, ID, FUN = function(S_i.) -diff(c(1, S_i.)))
 }
@@ -74,6 +74,8 @@ mpaf_grad_lambda <- function(z, lambda) {
 
 #' Calculate gradient of survivals for mpaf study
 #'
+#' Assumes arguments are sorted as in \code{\link{mpaf_S}}.
+#'
 #' @param grad_lambda matrix of hazard gradients
 #' @param S vector of survivals
 #' @param ID corresponding vector of IDs
@@ -84,9 +86,6 @@ mpaf_grad_lambda <- function(z, lambda) {
 #'   corresponding survival
 #' @keywords internal
 mpaf_grad_S <- function(grad_lambda, S, ID, PERIOD, dt) {
-  if (any(tapply(PERIOD, ID, is.unsorted)))
-    stop("Periods must be in ascending order for each ID to calculate survival")
-
   grad_lambda_sum <- apply(grad_lambda, 2, function(gl_..r)
     stats::ave(gl_..r, ID, FUN = function(gl_i.r) cumsum(gl_i.r * dt))
   )
@@ -96,6 +95,8 @@ mpaf_grad_S <- function(grad_lambda, S, ID, PERIOD, dt) {
 
 #' Calculate differences of gradient of survivals for mpaf study
 #'
+#' Assumes arguments are sorted as in \code{\link{mpaf_S}}.
+#'
 #' @param grad_S matrix of survival gradients
 #' @param ID corresponding vector of IDs
 #' @param PERIOD corresponding vector of periods
@@ -104,9 +105,6 @@ mpaf_grad_S <- function(grad_lambda, S, ID, PERIOD, dt) {
 #'   corresponding survival gradient
 #' @keywords internal
 mpaf_grad_delta_S <- function(grad_S, ID, PERIOD) {
-  if (any(tapply(PERIOD, ID, is.unsorted)))
-    stop("Periods must be in ascending order for each ID to calculate survival")
-
   # note grad_survival at time zero is zero
   apply(grad_S, 2, function(grad_S_..r)
     stats::ave(grad_S_..r, ID,
