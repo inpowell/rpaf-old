@@ -18,6 +18,6 @@ matrix of gradient differences, where each row is difference for the
   corresponding survival gradient
 }
 \description{
-Calculate differences of gradient of survivals for mpaf study
+Assumes arguments are sorted -- check with \code{\link{is_period_unsorted}}.
 }
 \keyword{internal}

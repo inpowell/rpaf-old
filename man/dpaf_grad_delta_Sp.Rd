@@ -19,6 +19,6 @@ dpaf_grad_delta_Sp(grad_S_l, Sp, ID, PERIOD)
 named list of survival product gradient matrices
 }
 \description{
-Calculate gradient of survival products
+Assumes arguments are sorted -- check with \code{\link{is_period_unsorted}}.
 }
 \keyword{internal}

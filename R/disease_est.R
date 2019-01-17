@@ -22,6 +22,7 @@
 #' @export
 dpaf_est_paf <- function(fit_d, fit_m, paf_data, newdata, level = 0.95) {
   if (!missing(newdata)) {
+    # equivalence assertions
     stopifnot(inherits(newdata, "paf_data"))
     if (!identical(paf_data$data_call$ft_breaks, newdata$data_call$ft_breaks))
       stop("Original periods and new periods are incompatible")
@@ -32,7 +33,16 @@ dpaf_est_paf <- function(fit_d, fit_m, paf_data, newdata, level = 0.95) {
       stop(paste("Name of period factor columns are not equal.",
                  "Ensure gen_data is called with identical",
                  "period_factor arguments"))
+    # setting ID and PERIOD
+    ID <- newdata$ID
+    PERIOD <- newdata$PERIOD
+  } else {
+    # setting ID and PERIOD
+    ID <- paf_data$ID
+    PERIOD <- paf_data$PERIOD
   }
+  if (is_period_unsorted(ID, PERIOD))
+    stop("Periods must be in ascending order by ID for PAF calculations")
 
   # ensure design frames are the same for each fit
   ## TEST this -- the correct answer may occur even if the following conditions
@@ -54,15 +64,11 @@ dpaf_est_paf <- function(fit_d, fit_m, paf_data, newdata, level = 0.95) {
   if (missing(newdata)) {
     z <-      stats::model.matrix(tm, fit_m$design)
     z_star <- stats::model.matrix(tm, fit_m$modified)
-    ID <- paf_data$ID
-    PERIOD <- paf_data$PERIOD
   } else {
     newframes <- design_frames(newdata$data, tm, fit_m$modifications,
                                fit_m$survreg$xlevels)
     z <-      stats::model.matrix(tm, newframes$design)
     z_star <- stats::model.matrix(tm, newframes$modified)
-    ID <- newdata$ID
-    PERIOD <- newdata$PERIOD
   }
 
   lambda <-      dpaf_lambda(z,      cf_l)

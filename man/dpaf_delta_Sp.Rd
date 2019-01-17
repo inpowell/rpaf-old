@@ -17,6 +17,6 @@ dpaf_delta_Sp(Sp, ID, PERIOD)
 vector of survival product differences over the course of each period
 }
 \description{
-Calculate survival differences for dpaf study
+Assumes arguments are sorted -- check with \code{\link{is_period_unsorted}}.
 }
 \keyword{internal}

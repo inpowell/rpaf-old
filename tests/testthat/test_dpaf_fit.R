@@ -74,16 +74,3 @@ test_that("Uneven period", {
   expect_equal(S, list(disease = c(exp(-0.5), exp(-3.5), exp(-3.5 - 3/3)),
                        mortality = c(exp(-2), exp(-7), exp(-7 - 5/3))))
 })
-
-test_that("Unsorted periods", {
-    x <- matrix(c(1,0,0, 0,1,1), ncol = 2)
-    cf_d <- c(g1 = -log(0.5), g2 = -log(3))
-    cf_m <- c(g1 = -log(2), g2 = -log(3))
-    cf <- list(disease = cf_d, mortality = cf_m)
-
-    id <- gl(1, 3)
-    period <- factor(c(1,3,2), levels = 1:3, ordered = TRUE)
-
-    lambda <- rpaf:::dpaf_lambda(x, cf)
-    expect_error(rpaf:::dpaf_S(lambda, id, period, c(1,1,1/3)))
-})

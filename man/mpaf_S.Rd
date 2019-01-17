@@ -20,6 +20,6 @@ mpaf_S(lambda, ID, PERIOD, dt)
 named matrix of survivals
 }
 \description{
-Calculate survivals for mpaf study
+Assumes arguments are sorted -- check with \code{\link{is_period_unsorted}}.
 }
 \keyword{internal}

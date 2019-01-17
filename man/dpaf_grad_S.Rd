@@ -22,6 +22,6 @@ names list of matrix of gradients, where each row in each list item
   is the gradient of the corresponding survival
 }
 \description{
-Calculate gradient of survivals for mpaf study
+Assumes arguments are sorted -- check with \code{\link{is_period_unsorted}}.
 }
 \keyword{internal}
