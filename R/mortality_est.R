@@ -110,10 +110,18 @@ mpaf_est_paf <- function(mpaf_fit, mpaf_data, newdata, level = 0.95) {
 
   grad_I_0 <-      mpaf_grad_I(-grad_S,      ID, PERIOD)
   grad_I_0_star <- mpaf_grad_I(-grad_S_star, ID, PERIOD)
-  if (length(levels(PERIOD)) > 1)
-    dimnames(grad_I_0)[[1]] <- dimnames(grad_I_0_star)[[1]] <- paste0(
-      "(", mpaf_data$breaks[1], ",", utils::tail(mpaf_data$breaks, -1), "]"
-    )
+
+  # need gradients to be row vectors if there is only one period
+  if (length(levels(PERIOD)) == 1) {
+    grad_I <- t(grad_I)
+    grad_I_star <- t(grad_I_star)
+    grad_I_0 <- t(grad_I_0)
+    grad_I_0_star <- t(grad_I_0_star)
+  }
+
+  dimnames(grad_I_0)[[1]] <- dimnames(grad_I_0_star)[[1]] <- paste0(
+    "(", mpaf_data$breaks[1], ",", utils::tail(mpaf_data$breaks, -1), "]"
+  )
 
   grad_ipaf0 <- grad_I_0_star / I_0_star - grad_I_0 / I_0
   grad_ipaf <- grad_I_star / I_star - grad_I / I
