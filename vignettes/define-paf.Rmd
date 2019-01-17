@@ -1,0 +1,37 @@
+---
+title: "Defining PAFs"
+author: "Ian Powell"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Defining PAFs}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+A population attributable fraction, or PAF, is a proportional difference in expected outcome incidences.
+
+Let us suppose we have a model that predicts the time until death (over the next five years) of individuals in a population, based only on age, sex, and smoking status. Let us also suppose we are interested in what happens if everyone in the population who smokes is replaced with an otherwise identical person who doesn't. Using Mini-Finland Health Survey data, we can do just that!
+
+```{r}
+library(rpaf)
+smoke_data <- gen_data(minifhs, "ID", c(0,5), "DEATH", "DEATH_FT", variables = c("B_COHORT", "SEX", "SMOKE"))
+smoke_fit <- est_matrix(
+  survival::Surv(f_end, DEATH) ~ B_COHORT + SEX + SMOKE,
+  smoke_data, list(SMOKE = c("Never", "<30/day", ">=30/day")),
+  c("SEX", "SMOKE")
+)
+```
+
+What this model tells us is how long we can expect people to survive for. What is doesn't tell us is how much of the population we can expect to be alive at the end of the fifth year. To find that, we use the `mpaf_est_paf` function:
+
+```{r}
+smoke_paf <- mpaf_est_paf(mpaf_fit = smoke_fit, mpaf_data = smoke_data)
+```
