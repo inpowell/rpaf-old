@@ -113,10 +113,10 @@ mpaf_est_paf <- function(mpaf_fit, mpaf_data, newdata, level = 0.95) {
 
   # need gradients to be row vectors if there is only one period
   if (length(levels(PERIOD)) == 1) {
-    grad_I <- t(grad_I)
-    grad_I_star <- t(grad_I_star)
-    grad_I_0 <- t(grad_I_0)
-    grad_I_0_star <- t(grad_I_0_star)
+    grad_I <- rbind(grad_I)
+    grad_I_star <- rbind(grad_I_star)
+    grad_I_0 <- rbind(grad_I_0)
+    grad_I_0_star <- rbind(grad_I_0_star)
   }
 
   dimnames(grad_I_0)[[1]] <- dimnames(grad_I_0_star)[[1]] <- paste0(
