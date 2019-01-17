@@ -12,7 +12,7 @@ gdata <- gen_data(
   variables = c("B_COHORT", "SEX", "BMI_2")
 ) # strictly it's not okay to use this for both disease and death
 
-test_that("single-period mortality", {
+test_that("single-period mortality dimensionality", {
   summary_m <- mpaf_summary(
     survival::Surv(f_end, DEATH) ~ B_COHORT + SEX + BMI_2,
     mpaf_data = gdata, modifications = list(BMI_2 = "<25.0"),
@@ -23,7 +23,7 @@ test_that("single-period mortality", {
                list("(0,17]", c("PAF", "2.5 %", "97.5 %")))
 })
 
-test_that("single-period disease", {
+test_that("single-period disease dimensionality", {
   summary_d <- dpaf_summary(
     survival::Surv(f_end, DIAB) ~ .,
     survival::Surv(f_end, DEATH) ~ .,
