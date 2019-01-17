@@ -5,7 +5,6 @@ date: "`r Sys.Date()`"
 output:
   rmarkdown::html_vignette:
     fig.caption: yes
-output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Defining PAFs}
   %\VignetteEngine{knitr::rmarkdown}
@@ -46,6 +45,7 @@ What this model tells us is how long we can expect people to survive for. What i
 ```{r}
 smoke_paf <- mpaf_est_paf(mpaf_fit = smoke_fit, mpaf_data = smoke_data)
 ```
+
 This gives us some nifty data, such as the expected incidence of death after five years in both our real and ideal world. This is shown in the following figure.
 
 ```{r echo=FALSE, fig.cap="Predicted opulation mortality after five years after modifying current smokers to never smoked. The PAF (which is the proportional difference between the two mortalities) is approximately 0.158."}
