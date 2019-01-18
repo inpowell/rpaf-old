@@ -1,0 +1,121 @@
+---
+title: "Disease PAF calculation"
+author: "Ian Powell"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Disease PAF calculation}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+
+library(rpaf)
+```
+
+This vignette describes the process to calculate a *Population Attributable Fraction* (PAF) for disease given data from a cohort study.
+
+# Quickstart
+
+Once the `rpaf` package has been loaded, disease PAFs and hazard ratios can be generated with two function calls. Here we use the Mini-Finland Health Survey data as an example, and calculate the PAF for disease when we modify body mass index.
+
+```{r}
+bmi_data <- gen_data(
+  indata = minifhs,
+  id_var = "ID",
+  ft_breaks = c(0,5,10,15,17),
+  death_ind = "DEATH", death_time = "DEATH_FT",
+  disease_ind = "DIAB", disease_time = "DIAB_FT",
+  variables = c("B_COHORT", "SEX", "BMI_2"),
+  period_factor = "F_PERIOD",
+  time_var = "F_TIME"
+)
+bmi_summ <- dpaf_summary(
+  disease_resp = survival::Surv(F_TIME, DIAB) ~ .,
+  death_resp = survival::Surv(F_TIME, DEATH) ~ .,
+  predictors = ~ 0 + B_COHORT * F_PERIOD + SEX + BMI_2, 
+  dpaf_data = bmi_data,
+  modifications = list(BMI_2 = "<25.0"),
+  covar_model = c("SEX", "BMI_2")
+)
+bmi_summ
+```
+
+Here, one can see
+
+ - summary output of the two survival regressions performed by `survival::survreg`
+ - the size of the cohort and, if applicable, the number of observations removed
+ - hazard ratio estimates and their confidence intervals (where reference levels are reported as `NA`) for both disease and mortality
+ - a list of the modifications performed in the PAF calculations
+ - PAFs for disease over various time periods (given in the row names)
+
+## Modifications
+
+It can be tricky to implement the `modifications` argument properly. In its base form, it is a named list (the names of which correspond to the columns to be modified). In each list element, the first item represents the desired final value after modification. So, taking the example above, we wanted to modify every entry of the `BMI_2` column to `<25.0`, so we set
+```r
+...
+  modifications = list(BMI_2 = "<25.0"),
+...
+```
+
+The remaining elements of each list item represent the values we initially want changed, while those not specified are preserved. So, if we wanted to change every instance where `BMI_2` is `>=25.0` to `<25.0`, then we would write
+```r
+...
+  modifications = list(BMI_2 = c("<25.0", ">=25.0")),
+...
+```
+however, as `BMI_2` has only two factor levels (that is, `<25.0` and `>=25.0`), in this case this has the exact same effect as the line above.
+
+## Further information
+The `dpaf_summary` object contains more information than is reported in the standard print function. For example, it includes the standard errors of the reported PAFs (in transformed space, \(\log(1-\text{PAF})\)), and the design frames (both raw and modified). Specific output can be accessed as from any other list in R, as in the following line of code or the tables below.[^1] Note that, because `dpaf_summary` fits two survival regressions, objects appended with `_d` refer to the model for disease, while those with `_m` refer to the model for mortality.
+
+```{r}
+bmi_summ$se_ipaf0
+```
+
+```{r results = 'asis', echo = FALSE}
+knitr::kable(bmi_summ$design_d[c(6:7, 58:59, 155:156),], caption = "Sample rows from `bmi_summ$design_d`")
+knitr::kable(bmi_summ$modified_d[c(6:7, 58:59, 155:156),], caption = "Sample rows from `bmi_summ$modified_d`")
+```
+
+# Details
+
+The `dpaf_summary` function should make life easier for those who want a quick disease PAF estimate. It firstly determines the survival regression models that need to be fitted (by calling `stats::update` on the formula components) and fits models for disease and mortality using two calls to `est_matrix`. After this, it calculates disease PAF estimates, and their confidence intervals, using a call to `dpaf_est_paf`. (If a grouping variable is included, which we shall not discuss here, it splits the data and repeats this call for groupwise PAF estimates, storing them appropriately.)
+
+## Model fitting -- `est_matrix`
+
+The `est_matrix` function fits a survival regression using `survival::survreg` on the prepared data. It takes the model formula for this survival regression and the PAF data we have prepared from `gen_data`. It also takes a list of modifications as described above and our covariate model for reporting hazard ratios. So, instead of the summary function above, we could start with
+
+```r
+bmi_fit_d <- est_matrix(
+  survival::Surv(F_TIME, DIAB) ~ 0 + B_COHORT * F_PERIOD + SEX + BMI_2, 
+  paf_response = bmi_data,
+  modifications = list(BMI_2 = "<25.0"),
+  covar_model = c("SEX", "BMI_2")
+)
+bmi_fit_m <- est_matrix(
+  survival::Surv(F_TIME, DEATH) ~ 0 + B_COHORT * F_PERIOD + SEX + BMI_2, 
+  paf_response = bmi_data,
+  modifications = list(BMI_2 = "<25.0"),
+  covar_model = c("SEX", "BMI_2")
+)
+```
+One can also here specify the width of the confidence intervals for hazard ratio reporting, which is by default 95%.
+
+## Population calculation -- `dpaf_est_paf`
+
+This function takes our model fit by `est_matrix` and the original data and calculates the PAF we so desire. So, to find the same disease PAFs as in our example above, we would call
+
+```r
+bmi_paf <- dpaf_est_paf(fit_d = bmi_fit_d, fit_m = bmi_fit_m,
+                        mpaf_data = smoke_data)
+```
+
+Note that this function optionally takes a `newdata` argument, which is useful when we want to use a different prevalence matrix. This argument **is expanded upon in further detail in another vignette**^[Except not yet.]. One can also specify the confidence interval width again for the PAFs, though now it does not need to be the same as the hazard ratio level, as it would be in the case of using `dpaf_summary`.
+
+[^1]: The naming of such items may be askew, however. For this, the author apologises, and is under the impression that at least order should be preserved, even if names aren't.
