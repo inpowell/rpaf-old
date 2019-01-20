@@ -34,6 +34,8 @@ dpaf_summary <- function(disease_resp, death_resp, predictors, dpaf_data,
   disease_fm <- stats::update(disease_resp, predictors)
   mortality_fm <- stats::update(death_resp, predictors)
 
+  # fit disease and mortality models using est_matrix -- see
+  # est_matrix.R
   fit_d <- est_matrix(disease_fm, dpaf_data, modifications, covar_model,
                       level = level, ...)
   fit_m <- est_matrix(mortality_fm, dpaf_data, modifications, covar_model,
@@ -41,23 +43,31 @@ dpaf_summary <- function(disease_resp, death_resp, predictors, dpaf_data,
 
   vv_l <- list("disease" = fit_d$var, "mortality" = fit_m$var)
 
+  # calculate PAFs, possibly using new prevalence data -- see
+  # disease_est.R
   if (missing(prevalence_data))
     dpaf_all <- dpaf_est_paf(fit_d, fit_m, dpaf_data, level = level)
   else
     dpaf_all <- dpaf_est_paf(fit_d, fit_m, dpaf_data, prevalence_data,
                              level = level)
-
+  # begin groupwise PAF estimates
   paf_groups <- NULL
   paf_diffs <- NULL
   if (!missing(group_vars)) {
     pafdat <- if (missing(prevalence_data)) dpaf_data else prevalence_data
+
+    # split PAF data -- see paf_utils.R
+    # add drop = FALSE to keep useful names
     pd_spl <- paf_data_split(pafdat, pafdat$data[, group_vars, drop = FALSE])
+
+    # call dpaf_est_paf for each subgroup -- again see disease_est.R
     paf_groups <- lapply(pd_spl, dpaf_est_paf,
                          fit_d = fit_d, fit_m = fit_m,
                          paf_data = dpaf_data,
                          level = level)
     names(paf_groups) <- names(pd_spl)
 
+    # call dpaf_est_diff for each pair of PAF estimates -- see disease_est.R
     paf_diffs <- utils::combn(paf_groups, 2, FUN = function(grp_lst)
       dpaf_est_diff(grp_lst[[1]], grp_lst[[2]], vv_l),
       simplify = FALSE
@@ -66,6 +76,7 @@ dpaf_summary <- function(disease_resp, death_resp, predictors, dpaf_data,
       utils::combn(names(pd_spl), 2, paste, collapse = " - ")
   }
 
+  # prevent name collisions between fit_d and fit_m
   names(fit_d) <- paste0(names(fit_d), "_d")
   names(fit_m) <- paste0(names(fit_m), "_m")
 

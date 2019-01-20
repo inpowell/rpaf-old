@@ -12,24 +12,33 @@
 #' @export
 mpaf_summary <- function(sr_formula, mpaf_data, modifications, covar_model,
                          prevalence_data, group_vars, level = 0.95, ...) {
+  # fit model using est_matrix -- see est_matrix.R
   mpaf_fit <- est_matrix(sr_formula, mpaf_data, modifications,
                          covar_model, level = level, ...)
 
+  # calculate PAFs, possibly using new prevalence data -- see mortality_est.R
   if (missing(prevalence_data))
     mpaf_all <- mpaf_est_paf(mpaf_fit, mpaf_data, level = level)
   else
     mpaf_all <- mpaf_est_paf(mpaf_fit, mpaf_data, prevalence_data,
                              level = level)
 
+  # begin groupwise PAF estimates
   mpaf_groups <- NULL
   mpaf_diffs <- NULL
   if (!missing(group_vars)) {
     pafdat <- if (missing(prevalence_data)) mpaf_data else prevalence_data
+
+    # split PAF data -- see paf_utils.R
+    # include drop = FALSE to keep useful names
     pd_spl <- paf_data_split(pafdat, pafdat$data[, group_vars, drop = FALSE])
+
+    # call mpaf_est_paf for each subgroup -- see mortality_est.R again
     mpaf_groups <- lapply(pd_spl, mpaf_est_paf,
                           mpaf_fit = mpaf_fit, level = level)
     names(mpaf_groups) <- names(pd_spl)
 
+    # call mpaf_est_diff for every pair of PAF estimates -- see mortality_est.R
     mpaf_diffs <- utils::combn(mpaf_groups, 2, FUN = function(grp_lst)
       mpaf_est_diff(grp_lst[[1]], grp_lst[[2]], mpaf_fit$var),
       simplify = FALSE

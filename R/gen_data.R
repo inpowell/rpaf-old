@@ -59,8 +59,11 @@ gen_data <- function(
   if (is.unsorted(ft_breaks))
     stop("Time breaks are not in order.")
 
+  # first include the function call for user reference later
   paf_data <- list(data_call = match.call())
 
+  # check to see if we have enough information for a disease PAF (1st case), a
+  # mortality PAF (2nd case) or just predictors (3rd case)
   if (!missing(death_time) && !missing(death_ind) &&
       !missing(disease_time) && !missing(disease_ind))
     type <- c("paf_data", "dpaf_response")
@@ -69,8 +72,8 @@ gen_data <- function(
   else
     type <- c("paf_data")
 
-  # drop columns
-  # select columns
+  # select columns we want to keep from the data frame, which depends on the
+  # information we have
   if ("dpaf_response" %in% type)
     df <- indata[,c(id_var, variables, death_time, death_ind,
                     disease_time, disease_ind)]
@@ -79,37 +82,57 @@ gen_data <- function(
   else
     df <- indata[,c(id_var, variables), drop = FALSE]
 
-  # handle missing data
+  # handle missing data and include actions
   df <- match.fun(na.action)(df)
   paf_data$nobs <- nrow(df)
   paf_data$na.action <- stats::na.action(df)
 
-  # time break information
+  # include time break information
   paf_data$breaks <- ft_breaks
 
-  # period information in data frame
-  # integer codes as in findInterval -- note not a factor yet
+  # use integer codes compatible with findInterval to initially represent
+  # period, and name the small, one-column data.frame appropriately
   intervals <- data.frame(1:(length(ft_breaks) - 1))
   names(intervals) <- period_factor
 
+  # create a long data frame by combinatorial merge. This replicates each row
+  # for each period, with a period indicator in the column named by
+  # period_factor
   ldf <- merge(intervals, df, by = NULL)
 
   if ("mpaf_response" %in% type) {
+    # move death_time column to the new time_var column
     ldf[[time_var]] <- ldf[[death_time]]
+
+    # figure out which interval death (or censoring!) lies in
     ft_intervals <- findInterval(ldf[[time_var]], ft_breaks)
+
+    # "partial time" to event is undefined after event has happened -- set to
+    # missing in this case
     ldf[ldf[[period_factor]] > ft_intervals, c(time_var, death_ind)] <- NA
+
+    # before event, death  hasn't happened
     ldf[ldf[[period_factor]] < ft_intervals, death_ind] <- FALSE
+
+    # "partial times" if no event has happened is defined as the length of the
+    # period
     ldf[ldf[[period_factor]] < ft_intervals, time_var] <-
       subset(diff(ft_breaks)[ldf[[period_factor]]],
              ft_intervals > ldf[[period_factor]])
+
+    # partial times when event has happened needs to be measured from the start
+    # of the period
     ldf[ft_intervals == ldf[[period_factor]], time_var] <-
       subset(ldf[[time_var]] - ft_breaks[ft_intervals],
              ft_intervals == ldf[[period_factor]])
 
+    # remove original death_time column from the data frame
     ldf <- subset(ldf, select = setdiff(names(ldf), death_time))
   }
   if ("dpaf_response" %in% type) {
+    # the time until censoring is the minimum time until event
     ldf[[time_var]] <- pmin(ldf[[death_time]], ldf[[disease_time]])
+
     # note that breaks[data[[period_factor]]] gives the time at start of period
     # and breaks[-1][data[[period_factor]]] gives time at end of period
     ft_intervals <- findInterval(ldf[[time_var]], ft_breaks, left.open = TRUE)
@@ -124,20 +147,25 @@ gen_data <- function(
     ldf[[disease_ind]][is_end] <- ldf[[disease_ind]][is_end] &
       ldf[[disease_time]][is_end] <= ldf[[death_time]][is_end]
 
-    # adjust times
+    # adjust times:
+    #  - after event, partial time is undefined
+    #  - before event, partial time is the length of the period of interest
+    #  - when event occurs, need to measure time from the start of the period
     ldf[[time_var]][post_end] <- NA
     ldf[[time_var]][pre_end] <- diff(ft_breaks)[ldf[pre_end, period_factor]]
     ldf[[time_var]][is_end] <- ldf[is_end, time_var] -
       ft_breaks[ft_intervals[is_end]]
   }
 
-  # convert period column to factor
+  # convert period column to factor, with useful names
   ldf[[period_factor]] <- factor(
     ldf[[period_factor]],
     labels = paste0("(", utils::head(ft_breaks, -1), ",",
                     utils::tail(ft_breaks, -1), "]")
   )
 
+  # store ID and PERIOD columns separately, because they may not be used in the
+  # regression model
   paf_data$ID <- ldf[[id_var]]
   paf_data$PERIOD <- ldf[[period_factor]]
 

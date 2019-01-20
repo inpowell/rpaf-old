@@ -59,6 +59,7 @@ mpaf_est_paf <- function(mpaf_fit, mpaf_data, newdata, level = 0.95) {
   if (is_period_unsorted(ID, PERIOD))
     stop("Periods must be in ascending order by ID for PAF calculations")
 
+  # convenience variables
   tm <- mpaf_fit$terms
   cf <- mpaf_fit$coefficients
   vv <- mpaf_fit$var
@@ -75,6 +76,8 @@ mpaf_est_paf <- function(mpaf_fit, mpaf_data, newdata, level = 0.95) {
     z <-      stats::model.matrix(tm, newframes$design)
     z_star <- stats::model.matrix(tm, newframes$modified)
   }
+
+  # see R/mortality_calc.R for source code for the following functions
 
   lambda <-      mpaf_lambda(z,      cf)
   lambda_star <- mpaf_lambda(z_star, cf)
@@ -102,6 +105,8 @@ mpaf_est_paf <- function(mpaf_fit, mpaf_data, newdata, level = 0.95) {
 
   # Gradient calculations ---------------------------------------------------
 
+  # see R/mortality_calc.R for source code on the following functions
+  
   grad_lambda <-      mpaf_grad_lambda(z,      lambda)
   grad_lambda_star <- mpaf_grad_lambda(z_star, lambda_star)
 
@@ -137,6 +142,9 @@ mpaf_est_paf <- function(mpaf_fit, mpaf_data, newdata, level = 0.95) {
 
   # standard error and confint calculations ---------------------------------
 
+  # quantiles of standard normal distribution that we need -- note
+  # that these are reversed as we are taking a decreasing
+  # transformation (i.e. -expm1)
   a <- (1 - level)/2
   a <- c(a, 1 - a)
 

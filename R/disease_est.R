@@ -45,13 +45,15 @@ dpaf_est_paf <- function(fit_d, fit_m, paf_data, newdata, level = 0.95) {
     stop("Periods must be in ascending order by ID for PAF calculations")
 
   # ensure design frames are the same for each fit
-  ## TEST this -- the correct answer may occur even if the following conditions
-  ## don't hold (below is sufficient, but not necessary)
+  ## TODO TEST this -- the correct answer may occur even if the
+  ## following conditions don't hold (below is sufficient, but not
+  ## necessary)
   stopifnot(isTRUE(all.equal(fit_d$terms, fit_m$terms)))
   stopifnot(identical(fit_d$design, fit_m$design))
   stopifnot(identical(fit_d$modified, fit_m$modified))
   stopifnot(identical(fit_d$modifications, fit_m$modifications))
 
+  # convenience variables
   tm <- fit_d$terms
   cf_l <- list("disease" = fit_d$coefficients,
                "mortality" = fit_m$coefficients)
@@ -71,6 +73,9 @@ dpaf_est_paf <- function(fit_d, fit_m, paf_data, newdata, level = 0.95) {
     z_star <- stats::model.matrix(tm, newframes$modified)
   }
 
+  # see R/disease_calc.R for source code on the following calculation
+  # functions
+  
   lambda <-      dpaf_lambda(z,      cf_l)
   lambda_star <- dpaf_lambda(z_star, cf_l)
 
@@ -103,6 +108,9 @@ dpaf_est_paf <- function(fit_d, fit_m, paf_data, newdata, level = 0.95) {
 
   # Gradient calculations ---------------------------------------------------
 
+  # see R/disease_calc.R again for source code on the following
+  # calculation functions
+  
   grad_lambda <-      dpaf_grad_lambda(z,      lambda)
   grad_lambda_star <- dpaf_grad_lambda(z_star, lambda_star)
 
@@ -128,7 +136,7 @@ dpaf_est_paf <- function(fit_d, fit_m, paf_data, newdata, level = 0.95) {
   grad_I_0 <-      lapply(grad_I,      function(gI) apply(gI, 2, cumsum))
   grad_I_0_star <- lapply(grad_I_star, function(gI) apply(gI, 2, cumsum))
 
-  # also need these to be row vectors because magic
+  # also need these to be row vectors because magic/matrix conformability
   if (length(levels(PERIOD)) == 1) {
     grad_I_0 <- lapply(grad_I, rbind)
     grad_I_0_star <- lapply(grad_I_star, rbind)
@@ -147,6 +155,9 @@ dpaf_est_paf <- function(fit_d, fit_m, paf_data, newdata, level = 0.95) {
 
   # Standard error and confint calculations ---------------------------------
 
+  # quantiles of standard normal distribution that we need -- note
+  # that these are reversed as we are taking a decreasing
+  # transformation (i.e. -expm1)
   a <- (1 - level)/2
   a <- c(a, 1 - a)
 
@@ -187,6 +198,8 @@ dpaf_est_paf <- function(fit_d, fit_m, paf_data, newdata, level = 0.95) {
 dpaf_est_diff <- function(dpaf1, dpaf2, vv_l) {
   paf_diff <- c(dpaf1$paf[,1] - dpaf2$paf[,1], dpaf1$paf0[,1] - dpaf2$paf0[,1])
 
+  # calculate difference in gradients wrt both disease and mortality
+  # coefficients
   gpaf_diff <- mapply(
     rbind,
     mapply(`-`, dpaf1$grad_paf, dpaf2$grad_paf, SIMPLIFY = FALSE),
