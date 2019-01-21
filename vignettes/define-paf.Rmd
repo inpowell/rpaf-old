@@ -36,7 +36,8 @@ smoke_fit <- est_matrix(
 knitr::kable(
   smoke_fit$HR,
   caption = paste("Hazard ratios and 95% confidence limits for sex and",
-                  "smoking status. Note NA values indicate reference level.")
+                  "smoking status. Note NA values indicate reference level."),
+  digits = 3
 )
 ```
 
@@ -48,8 +49,8 @@ smoke_paf <- mpaf_est_paf(mpaf_fit = smoke_fit, mpaf_data = smoke_data)
 
 This gives us some nifty data, such as the expected incidence of death after five years in both our real and ideal world. This is shown in the following figure.
 
-```{r echo=FALSE, fig.cap="Predicted opulation mortality after five years after modifying current smokers to never smoked. The PAF (which is the proportional difference between the two mortalities) is approximately 0.158. Graphically, this can be seen in the modified bar being 15.8% smaller than the original."}
-barplot(c("Original" = 100 * smoke_paf$incidence,
-          "Modified" = 100 * smoke_paf$incidence_star),
-        ylab = "Population mortality (%)")
+```{r echo=FALSE, fig.cap="Predicted population mortality after five years after modifying current smokers to never smoked. The PAF (which is the proportional difference between the two mortalities) is approximately 0.158. Graphically, this can be seen in the modified bar being 15.8% smaller than the original."}
+barplot(c("Original" = 10000 * smoke_paf$incidence,
+          "Modified" = 10000 * smoke_paf$incidence_star),
+        ylab = "Deaths per 10,000")
 ```
