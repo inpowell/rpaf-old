@@ -23,7 +23,7 @@ A population attributable fraction, or PAF, is a proportional difference in expe
 Let us suppose we have a model that predicts the time until death (over the next five years) of individuals in a population, based only on age, sex, and smoking status. Let us also suppose we are interested in what happens if everyone in the population who smokes is replaced with an otherwise identical person who doesn't. Using Mini-Finland Health Survey data, we can do just that!
 
 ```{r}
-library(rpaf)
+devtools::load_all("..")
 smoke_data <- gen_data(minifhs, "ID", c(0,5), "DEATH", "DEATH_FT", variables = c("B_COHORT", "SEX", "SMOKE"))
 smoke_fit <- est_matrix(
   survival::Surv(f_end, DEATH) ~ B_COHORT + SEX + SMOKE,
@@ -50,6 +50,7 @@ smoke_paf <- mpaf_est_paf(mpaf_fit = smoke_fit, mpaf_data = smoke_data)
 This gives us some nifty data, such as the expected incidence of death after five years in both our real and ideal world. This is shown in the following figure.
 
 ```{r echo=FALSE, fig.cap="Predicted population mortality after five years after modifying current smokers to never smoked. The PAF (which is the proportional difference between the two mortalities) is approximately 0.158. Graphically, this can be seen in the modified bar being 15.8% smaller than the original."}
+par(mar = c(3.1, 4.1, 1, 1))
 barplot(c("Original" = 10000 * smoke_paf$incidence,
           "Modified" = 10000 * smoke_paf$incidence_star),
         ylab = "Deaths per 10,000")
