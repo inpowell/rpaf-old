@@ -86,10 +86,6 @@ print.dpaf_summary <- function(x, ..., coef_regex = "",
     cat("\nCall:\n")
     dput(cl)
   }
-  if (!is.null(dcl <- x$data_call)) {
-    cat("\nData preparation call:\n")
-    dput(dcl)
-  }
   cat(vsep)
 
   if (!is.null(x$survreg_d) || !is.null(x$survreg_m)) {
@@ -132,16 +128,16 @@ print.dpaf_summary <- function(x, ..., coef_regex = "",
     cat(vsep)
   }
 
-  if (!is.null(x$modifications)) {
+  if (!is.null(x$modifications_m)) {
     cat("\nModifications:\n")
-    lapply(X = seq_along(x$modifications), FUN = function(i, lst) {
+    lapply(X = seq_along(x$modifications_m), FUN = function(i, lst) {
       if (length(lst[[i]]) > 1)
         cat(names(lst)[i], ": ",  paste(lst[[i]][-1], collapse = ", "),
             " -> ", lst[[i]][1], "\n", sep = "")
       else
         cat(names(lst)[i], ": ", ".",
             " -> ", lst[[i]][1], "\n", sep = "")
-    }, lst = x$modifications)
+    }, lst = x$modifications_m)
     cat(vsep)
   }
 
