@@ -32,7 +32,7 @@ print.mpaf_summary <- function(x, ..., coef_regex = "",
 
   if (!is.null(x$HR)) {
     cat("\nHazard ratios:\n")
-    print(x$HR, digits = digits, ...)
+    print(x$HR, digits = digits, na.print = "--", ...)
 
     cat(vsep)
   }
@@ -86,10 +86,6 @@ print.dpaf_summary <- function(x, ..., coef_regex = "",
     cat("\nCall:\n")
     dput(cl)
   }
-  if (!is.null(dcl <- x$data_call)) {
-    cat("\nData preparation call:\n")
-    dput(dcl)
-  }
   cat(vsep)
 
   if (!is.null(x$survreg_d) || !is.null(x$survreg_m)) {
@@ -121,27 +117,27 @@ print.dpaf_summary <- function(x, ..., coef_regex = "",
 
     if (!is.null(x$HR_d)) {
       cat("\n    Disease:\n")
-      print(x$HR_d, digits = digits, ...)
+      print(x$HR_d, digits = digits, na.print = '--', ...)
     }
 
     if (!is.null(x$HR_m)) {
       cat("\n    Mortality:\n")
-      print(x$HR_m, digits = digits, ...)
+      print(x$HR_m, digits = digits, na.print = '--', ...)
     }
 
     cat(vsep)
   }
 
-  if (!is.null(x$modifications)) {
+  if (!is.null(x$modifications_m)) {
     cat("\nModifications:\n")
-    lapply(X = seq_along(x$modifications), FUN = function(i, lst) {
+    lapply(X = seq_along(x$modifications_m), FUN = function(i, lst) {
       if (length(lst[[i]]) > 1)
         cat(names(lst)[i], ": ",  paste(lst[[i]][-1], collapse = ", "),
             " -> ", lst[[i]][1], "\n", sep = "")
       else
         cat(names(lst)[i], ": ", ".",
             " -> ", lst[[i]][1], "\n", sep = "")
-    }, lst = x$modifications)
+    }, lst = x$modifications_m)
     cat(vsep)
   }
 
