@@ -56,8 +56,10 @@ gen_data <- function(
   period_factor = "f_period",
   time_var = "f_end"
 ) {
-  if (is.unsorted(ft_breaks))
-    stop("Time breaks are not in order.")
+  if (is.unsorted(ft_breaks)) {
+    warning("Time breaks are not in order; reordering them.")
+    ft_breaks <- sort(ft_breaks)
+  }
 
   # first include the function call for user reference later
   paf_data <- list(data_call = match.call())
