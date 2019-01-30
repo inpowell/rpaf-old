@@ -117,6 +117,9 @@ est_matrix <- function(sr_formula, paf_response, modifications,
   dimnames(matrix_data$HR)[[1]] <- params
   dimnames(matrix_data$HR)[[2]] <- dimnames(matrix_data$HR)[[2]][c(1,3,2)]
 
+  # set reference HR estimates to 1, leave confints blank
+  matrix_data$HR[is.na(matrix_data$HR[,1]), 1] <- 1.0
+
   retlist <- c(matrix_data,
                design_frames(paf_response$data, Terms, modifications,
                              matrix_data$survreg$xlevels))

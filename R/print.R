@@ -32,7 +32,7 @@ print.mpaf_summary <- function(x, ..., coef_regex = "",
 
   if (!is.null(x$HR)) {
     cat("\nHazard ratios:\n")
-    print(x$HR, digits = digits, ...)
+    print(x$HR, digits = digits, na.print = "--", ...)
 
     cat(vsep)
   }
@@ -121,12 +121,12 @@ print.dpaf_summary <- function(x, ..., coef_regex = "",
 
     if (!is.null(x$HR_d)) {
       cat("\n    Disease:\n")
-      print(x$HR_d, digits = digits, ...)
+      print(x$HR_d, digits = digits, na.print = '--', ...)
     }
 
     if (!is.null(x$HR_m)) {
       cat("\n    Mortality:\n")
-      print(x$HR_m, digits = digits, ...)
+      print(x$HR_m, digits = digits, na.print = '--', ...)
     }
 
     cat(vsep)
