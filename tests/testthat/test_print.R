@@ -6,7 +6,7 @@ library(rpaf)
 
 df <- minifhs[c(1:20, 1096),]
 smoke_data <- gen_data(df, id_var = "ID", ft_breaks = c(0,17),
-                       death_ind = "DEATH", death_time = "DEATH_FT",
+                       primary_ind = "DEATH", primary_time = "DEATH_FT",
                        variables = c("B_COHORT", "SEX", "SMOKE"))
 
 smoke_mpaf <- mpaf_summary(
@@ -17,8 +17,8 @@ smoke_mpaf <- mpaf_summary(
 )
 
 bmi_data <- gen_data(df, id_var = "ID", ft_breaks = c(0,17),
-                     death_ind = "DEATH", death_time = "DEATH_FT",
-                     disease_ind = "DIAB", disease_time = "DIAB_FT",
+                     primary_ind = "DIAB", primary_time = "DIAB_FT",
+                     secondary_ind = "DEATH", secondary_time = "DEATH_FT",
                      variables = c("B_COHORT", "SEX", "BMI_2")
                     )
 bmi_dpaf <- dpaf_summary(

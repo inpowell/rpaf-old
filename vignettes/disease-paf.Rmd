@@ -29,15 +29,15 @@ bmi_data <- gen_data(
   indata = minifhs,
   id_var = "ID",
   ft_breaks = c(0,5,10,15,17),
-  death_ind = "DEATH", death_time = "DEATH_FT",
-  disease_ind = "DIAB", disease_time = "DIAB_FT",
+  primary_ind = "DIAB", primary_time = "DIAB_FT",
+  secondary_ind = "DEATH", secondary_time = "DEATH_FT",
   variables = c("B_COHORT", "SEX", "BMI_2"),
   period_factor = "F_PERIOD",
   time_var = "F_TIME"
 )
 bmi_summ <- dpaf_summary(
-  disease_resp = survival::Surv(F_TIME, DIAB) ~ .,
-  death_resp = survival::Surv(F_TIME, DEATH) ~ .,
+  primary_resp = survival::Surv(F_TIME, DIAB) ~ .,
+  secondary_resp = survival::Surv(F_TIME, DEATH) ~ .,
   predictors = ~ 0 + B_COHORT * F_PERIOD + SEX + BMI_2, 
   dpaf_data = bmi_data,
   modifications = list(BMI_2 = "<25.0"),
@@ -92,13 +92,13 @@ The `dpaf_summary` function should make life easier for those who want a quick d
 The `est_matrix` function fits a survival regression using `survival::survreg` on the prepared data. It takes the model formula for this survival regression and the PAF data we have prepared from `gen_data`. It also takes a list of modifications as described above and our covariate model for reporting hazard ratios. So, instead of the summary function above, we could start with
 
 ```r
-bmi_fit_d <- est_matrix(
+bmi_fit1 <- est_matrix(
   survival::Surv(F_TIME, DIAB) ~ 0 + B_COHORT * F_PERIOD + SEX + BMI_2, 
   paf_response = bmi_data,
   modifications = list(BMI_2 = "<25.0"),
   covar_model = c("SEX", "BMI_2")
 )
-bmi_fit_m <- est_matrix(
+bmi_fit2 <- est_matrix(
   survival::Surv(F_TIME, DEATH) ~ 0 + B_COHORT * F_PERIOD + SEX + BMI_2, 
   paf_response = bmi_data,
   modifications = list(BMI_2 = "<25.0"),
@@ -112,7 +112,7 @@ One can also here specify the width of the confidence intervals for hazard ratio
 This function takes our model fit by `est_matrix` and the original data and calculates the PAF we so desire. So, to find the same disease PAFs as in our example above, we would call
 
 ```r
-bmi_paf <- dpaf_est_paf(fit_d = bmi_fit_d, fit_m = bmi_fit_m,
+bmi_paf <- dpaf_est_paf(fit1 = bmi_fit_d, fit2 = bmi_fit_m,
                         mpaf_data = smoke_data)
 ```
 

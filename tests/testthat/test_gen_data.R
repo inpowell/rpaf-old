@@ -13,7 +13,7 @@ df <- data.frame(
 
 test_that("unordered breaks are corrected with warning", {
   expect_warning(paf_data <- gen_data(df, "id", ft_breaks = c(0,2,6,4),
-                                      death_ind = "ind", death_time = "time",
+                                      primary_ind = "ind", primary_time = "time",
                                       variables = "tmt"),
                  "Time breaks are not in order; reordering them.")
   expect_equal(paf_data$breaks, c(0,2,4,6))

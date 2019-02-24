@@ -29,8 +29,8 @@ smoke_data <- gen_data(
   indata = minifhs,
   id_var = "ID",
   ft_breaks = c(0,5,10,15,17),
-  death_ind = "DEATH",
-  death_time = "DEATH_FT",
+  primary_ind = "DEATH",
+  primary_time = "DEATH_FT",
   variables = c("B_COHORT", "SEX", "SMOKE"),
   period_factor = "F_PERIOD",
   time_var = "F_TIME"

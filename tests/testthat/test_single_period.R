@@ -7,8 +7,8 @@ library(rpaf)
 gdata <- gen_data(
   indata = head(minifhs, 20), # contains deaths and one diabetes case
   id_var = "ID", ft_breaks = c(0,17),
-  death_ind = "DEATH", death_time = "DEATH_FT",
-  disease_ind = "DIAB", disease_time = "DIAB_FT",
+  primary_ind = "DIAB", primary_time = "DIAB_FT",
+  secondary_ind = "DEATH", secondary_time = "DEATH_FT",
   variables = c("B_COHORT", "SEX", "BMI_2")
 ) # strictly it's not okay to use this for both disease and death
 

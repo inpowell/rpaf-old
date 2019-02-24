@@ -12,7 +12,7 @@ df <- data.frame(
 )
 
 paf_data <- gen_data(df, id_var = "id", ft_breaks = c(0,5),
-                     death_ind = "died", death_time = "time", variables = "tmt",
+                     primary_ind = "died", primary_time = "time", variables = "tmt",
                      time_var = "f_time"
                      )
 test_that("reference levels", {
