@@ -20,7 +20,7 @@ test_that("hazard and survival gradients", {
 
   S <- exp(-lambda)
 
-  # grad <- dpaf_grad(z, hz_d, hz_m, sv_d, sv_m, breaks, ID, PERIOD)
+  # grad <- dpaf_grad(z, hz_1, hz_2, sv_1, sv_2, breaks, ID, PERIOD)
 
   # expected values
   e_glambda <- matrix(c(2,0,0, 0,3,0, 2,0,0, 0,3,0, 6,0,6, 0,7,7, 6,0,6, 0,7,7),

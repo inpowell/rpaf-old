@@ -77,8 +77,8 @@ dpaf_summary <- function(primary_resp, secondary_resp, predictors, dpaf_data,
   }
 
   # prevent name collisions between fit1 and fit2
-  names(fit1) <- paste0(names(fit1), "_primary")
-  names(fit2) <- paste0(names(fit2), "_secondary")
+  names(fit1) <- paste0(names(fit1), "_1")
+  names(fit2) <- paste0(names(fit2), "_2")
 
   retlist <- c(list(call = match.call()),
                list("nobs" = dpaf_data$nobs, "na.action" = dpaf_data$na.action),

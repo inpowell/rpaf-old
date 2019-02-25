@@ -72,15 +72,15 @@ The remaining elements of each list item represent the values we initially want 
 however, as `BMI_2` has only two factor levels (that is, `<25.0` and `>=25.0`), in this case this has the exact same effect as the line above.
 
 ## Further information
-The `dpaf_summary` object contains more information than is reported in the standard print function. For example, it includes the standard errors of the reported PAFs (in transformed space, \(\log(1-\text{PAF})\)), and the design frames (both raw and modified). Specific output can be accessed as from any other list in R, as in the following line of code or the tables below.[^1] Note that, because `dpaf_summary` fits two survival regressions, objects appended with `_d` refer to the model for disease, while those with `_m` refer to the model for mortality.
+The `dpaf_summary` object contains more information than is reported in the standard print function. For example, it includes the standard errors of the reported PAFs (in transformed space, \(\log(1-\text{PAF})\)), and the design frames (both raw and modified). Specific output can be accessed as from any other list in R, as in the following line of code or the tables below.[^1] Note that, because `dpaf_summary` fits two survival regressions, objects appended with `_1` refer to the model for outcome of interest (the "primary" outcome), while those with `_2` refer to the model for competing outcome (the "secondary" outcome).
 
 ```{r}
 bmi_summ$se_ipaf0
 ```
 
 ```{r results = 'asis', echo = FALSE}
-knitr::kable(bmi_summ$design_d[c(6:7, 58:59, 155:156),], caption = "Sample rows from `bmi_summ$design_d`")
-knitr::kable(bmi_summ$modified_d[c(6:7, 58:59, 155:156),], caption = "Sample rows from `bmi_summ$modified_d`")
+knitr::kable(bmi_summ$design_1[c(6:7, 58:59, 155:156),], caption = "Sample rows from `bmi_summ$design_1`")
+knitr::kable(bmi_summ$modified_1[c(6:7, 58:59, 155:156),], caption = "Sample rows from `bmi_summ$modified_1`")
 ```
 
 # Details
@@ -112,7 +112,7 @@ One can also here specify the width of the confidence intervals for hazard ratio
 This function takes our model fit by `est_matrix` and the original data and calculates the PAF we so desire. So, to find the same disease PAFs as in our example above, we would call
 
 ```r
-bmi_paf <- dpaf_est_paf(fit1 = bmi_fit_d, fit2 = bmi_fit_m,
+bmi_paf <- dpaf_est_paf(fit1 = bmi_fit_1, fit2 = bmi_fit_2,
                         mpaf_data = smoke_data)
 ```
 
