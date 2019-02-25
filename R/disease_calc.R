@@ -71,7 +71,7 @@ dpaf_delta_Sp <- function(Sp, ID, PERIOD) {
 #' @keywords internal
 dpaf_I <- function(lambda_l, dSp, PERIOD) {
   as.vector(tapply(
-    lambda_l[["disease"]] / do.call(`+`, lambda_l) * dSp,
+    lambda_l[["primary"]] / do.call(`+`, lambda_l) * dSp,
     PERIOD, mean
   ))
 }
@@ -146,16 +146,16 @@ dpaf_grad_delta_Sp <- function(grad_S_l, Sp, ID, PERIOD) {
 #' @return named vector of mortalities \eqn{I} (see Warning on names)
 #' @keywords internal
 dpaf_grad_I <- function(grad_lambda_l, grad_dSp_l, lambda_l, dSp, PERIOD) {
-  summands_d <- grad_lambda_l[["disease"]] *
-    lambda_l[["mortality"]] / do.call(`+`, lambda_l)^2 * dSp +
-    grad_dSp_l[["disease"]] * lambda_l[["disease"]] / do.call(`+`, lambda_l)
+  summands_d <- grad_lambda_l[["primary"]] *
+    lambda_l[["secondary"]] / do.call(`+`, lambda_l)^2 * dSp +
+    grad_dSp_l[["primary"]] * lambda_l[["primary"]] / do.call(`+`, lambda_l)
 
-  summands_m <- -grad_lambda_l[["mortality"]] *
-    lambda_l[["disease"]] / do.call(`+`, lambda_l)^2 * dSp +
-    grad_dSp_l[["mortality"]] * lambda_l[["disease"]] / do.call(`+`, lambda_l)
+  summands_m <- -grad_lambda_l[["secondary"]] *
+    lambda_l[["primary"]] / do.call(`+`, lambda_l)^2 * dSp +
+    grad_dSp_l[["secondary"]] * lambda_l[["primary"]] / do.call(`+`, lambda_l)
 
   lapply(
-    list("disease" = summands_d, "mortality" = summands_m),
+    list("primary" = summands_d, "secondary" = summands_m),
     function(smnd) apply(smnd, 2, function(smnd_..r)
       as.vector(tapply(smnd_..r, PERIOD, mean)))
   )
