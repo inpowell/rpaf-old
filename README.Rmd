@@ -79,5 +79,9 @@ knitr::kable(rbind(bmi_summary$paf, bmi_summary$paf0), digits = 4)
 
 Note that in both these cases, the period and follow-up time variables have been automatically named as `f_period` and `f_end` respectively. These names can be chosen in the call to `gen_data`.
 
+## Acknowledgements
+
+This package was started during a joint summer research scholarship funded by the Australian Mathematical Sciences Institute and UNSW Sydney in the summer of 2018-19.
+
 ## References
 - Laaksonen, M.A., Virtala, E., Knekt, P., Oja, H. and Härkänen, T., 2011. SAS macros for calculation of population attributable fraction in a cohort study design. *J Stat Softw*, 43(7), pp.1-25.
