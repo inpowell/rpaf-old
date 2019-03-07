@@ -4,7 +4,7 @@ summary_smoke <- mpaf_summary(
   survival::Surv(f_end, DEATH) ~ B_COHORT * f_period + SEX + SMOKE,
   paf_data = mpaf_smoke,
   modifications = list("SMOKE" = c("Never", "<30/day", ">=30/day")),
-  covar_model = c("SEX", "SMOKE")
+  hr_out = c("SEX", "SMOKE")
 )
 
 summary_smoke

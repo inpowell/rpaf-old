@@ -4,8 +4,8 @@
 \alias{est_matrix}
 \title{Calculate model frames, parameter estimates and hazard ratios}
 \usage{
-est_matrix(sr_formula, paf_response, modifications, covar_model,
-  level = 0.95, ...)
+est_matrix(sr_formula, paf_response, modifications, hr_out, level = 0.95,
+  ...)
 }
 \arguments{
 \item{sr_formula}{a formula to be passed to \code{\link[survival]{survreg}}}
@@ -15,7 +15,7 @@ est_matrix(sr_formula, paf_response, modifications, covar_model,
 \item{modifications}{a list of modifications to apply for PAF calculation;
 see Details for more information}
 
-\item{covar_model}{an optional character vector describing variables of
+\item{hr_out}{an optional character vector describing variables of
 interest for hazard ratio calculation}
 
 \item{level}{width of the confidence intervals for hazard ratios, default
@@ -58,7 +58,7 @@ first element in each vector should be the desired output value. If
 there are subsequent elements in the vector, these identify which
 values to convert from.
 
-If \code{covar_model} is not specified,
+If \code{hr_out} is not specified,
 the "hazard ratios" reported include all first order terms.
 }
 \section{Warnings}{
@@ -67,7 +67,7 @@ the "hazard ratios" reported include all first order terms.
   A hazard ratio is not well-defined when the term of interest is an
   interaction. Use caution when interpreting such results.
 
-  When using interaction terms in \code{covar_model}, the wrong order of
+  When using interaction terms in \code{hr_out}, the wrong order of
   covariate names will result in an error. Only terms that appear in
   \code{attr(terms(sr_formula), "term.labels")} can be used.
 }

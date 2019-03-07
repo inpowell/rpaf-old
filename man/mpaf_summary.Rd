@@ -5,8 +5,8 @@
 \title{Calculate mortality PAF estimates, confidence intervals and groupwise
 differences}
 \usage{
-mpaf_summary(sr_formula, paf_data, modifications, covar_model,
-  prevalence_data, group_vars, level = 0.95, ...)
+mpaf_summary(sr_formula, paf_data, modifications, hr_out, prevalence_data,
+  group_vars, level = 0.95, ...)
 }
 \arguments{
 \item{sr_formula}{a formula to be passed to \code{\link[survival]{survreg}}}
@@ -16,7 +16,7 @@ mpaf_summary(sr_formula, paf_data, modifications, covar_model,
 \item{modifications}{a list of modifications to apply for PAF calculation;
 see Details for more information}
 
-\item{covar_model}{an optional character vector describing variables of
+\item{hr_out}{an optional character vector describing variables of
 interest for hazard ratio calculation}
 
 \item{prevalence_data}{matrix of prevalences as class \code{paf_data}}

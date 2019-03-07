@@ -49,7 +49,7 @@ smoke_summary <- mpaf_summary(
   survival::Surv(f_end, DEATH) ~ B_COHORT * f_period + SEX + SMOKE,
   paf_data = smoke_data, 
   modifications = list(SMOKE = c("Never", "<30/day", ">=30/day")),
-  covar_model = c("SEX", "SMOKE")
+  hr_out = c("SEX", "SMOKE")
 )
 
 knitr::kable(rbind(smoke_summary$paf, smoke_summary$paf0), digits = 4)
@@ -71,7 +71,7 @@ bmi_summary <- dpaf_summary(
   predictors = ~ B_COHORT * f_period + SEX + BMI_2,
   dpaf_data = bmi_data,
   modifications = list(BMI_2 = "<25.0"), 
-  covar_model = c("SEX", "BMI_2")
+  hr_out = c("SEX", "BMI_2")
 )
 
 knitr::kable(rbind(bmi_summary$paf, bmi_summary$paf0), digits = 4)

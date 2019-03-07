@@ -6,8 +6,7 @@
 differences}
 \usage{
 dpaf_summary(primary_resp, secondary_resp, predictors, dpaf_data,
-  modifications, covar_model, prevalence_data, group_vars, level = 0.95,
-  ...)
+  modifications, hr_out, prevalence_data, group_vars, level = 0.95, ...)
 }
 \arguments{
 \item{primary_resp}{formula with response for primary outcome regression (note RHS
@@ -25,7 +24,7 @@ regressions (LHS should be empty)}
 \item{modifications}{a list of modifications to apply for PAF calculation;
 see Details for more information}
 
-\item{covar_model}{an optional character vector describing variables of
+\item{hr_out}{an optional character vector describing variables of
 interest for hazard ratio calculation}
 
 \item{prevalence_data}{optional matrix of external prevalences as class
@@ -45,7 +44,7 @@ Calculate mortality PAF estimates, confidence intervals and groupwise
 differences
 }
 \details{
-If \code{covar_model} is not specified, the "hazard ratios" reported include
+If \code{hr_out} is not specified, the "hazard ratios" reported include
 all first order terms.
 
 \code{modifications} should be a named list of scalars or vectors. Each name

@@ -10,11 +10,11 @@
 #'
 #' @return a list of potenitally interesting hazard ratio and PAF estimates
 #' @export
-mpaf_summary <- function(sr_formula, paf_data, modifications, covar_model,
+mpaf_summary <- function(sr_formula, paf_data, modifications, hr_out,
                          prevalence_data, group_vars, level = 0.95, ...) {
   # fit model using est_matrix -- see est_matrix.R
   mpaf_fit <- est_matrix(sr_formula, paf_data, modifications,
-                         covar_model, level = level, ...)
+                         hr_out, level = level, ...)
 
   # calculate PAFs, possibly using new prevalence data -- see mortality_est.R
   if (missing(prevalence_data))

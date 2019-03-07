@@ -11,7 +11,7 @@
 #' there are subsequent elements in the vector, these identify which
 #' values to convert from.
 #'
-#' If \code{covar_model} is not specified,
+#' If \code{hr_out} is not specified,
 #' the "hazard ratios" reported include all first order terms.
 #'
 #' @section Warnings:
@@ -19,7 +19,7 @@
 #'   A hazard ratio is not well-defined when the term of interest is an
 #'   interaction. Use caution when interpreting such results.
 #'
-#'   When using interaction terms in \code{covar_model}, the wrong order of
+#'   When using interaction terms in \code{hr_out}, the wrong order of
 #'   covariate names will result in an error. Only terms that appear in
 #'   \code{attr(terms(sr_formula), "term.labels")} can be used.
 #'
@@ -27,7 +27,7 @@
 #' @param paf_response a response object as output by \code{\link{gen_data}}
 #' @param modifications a list of modifications to apply for PAF calculation;
 #'   see Details for more information
-#' @param covar_model an optional character vector describing variables of
+#' @param hr_out an optional character vector describing variables of
 #'   interest for hazard ratio calculation
 #' @param ... extra parameters to be passed to \code{survreg}
 #' @param level width of the confidence intervals for hazard ratios, default
@@ -56,7 +56,7 @@
 #'
 #' @export
 est_matrix <- function(sr_formula, paf_response, modifications,
-                       covar_model, level = 0.95, ...) {
+                       hr_out, level = 0.95, ...) {
   stopifnot(inherits(paf_response, c("mpaf_response", "dpaf_response")))
 
   # store call and modifications for user reference later if desired
@@ -82,12 +82,12 @@ est_matrix <- function(sr_formula, paf_response, modifications,
   matrix_data$terms <- Terms
 
   # handle missing covariate model -- get all first-order effects
-  if (missing(covar_model)) {
-    covar_model <- attr(Terms, "term.labels")[attr(Terms, "order") == 1]
+  if (missing(hr_out)) {
+    hr_out <- attr(Terms, "term.labels")[attr(Terms, "order") == 1]
   }
 
   # select which hazard ratios to calculate and report. This is a mess.
-  params <- unlist(lapply(covar_model, function(label) {
+  params <- unlist(lapply(hr_out, function(label) {
     # given a label (like "COVAR" or "factor1:factor2"), determine which factors
     # need to be included
     inc <- which(attr(Terms, "factors")[,label] > 0)

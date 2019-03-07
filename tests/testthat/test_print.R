@@ -13,7 +13,7 @@ smoke_mpaf <- mpaf_summary(
   survival::Surv(f_end, DEATH) ~ B_COHORT + SEX + SMOKE,
   smoke_data,
   modifications = list(SMOKE = c("Never", "<30/day", ">=30/day")),
-  covar_model = c("SEX", "SMOKE")
+  hr_out = c("SEX", "SMOKE")
 )
 
 bmi_data <- gen_data(df, id_var = "ID", ft_breaks = c(0,17),
@@ -27,7 +27,7 @@ bmi_dpaf <- dpaf_summary(
   ~ B_COHORT + SEX + BMI_2,
   bmi_data,
   modifications = list(BMI_2 = "<25.0"),
-  covar_model = c("SEX", "BMI_2")
+  hr_out = c("SEX", "BMI_2")
 )
 
 test_that("disease PAF summary prints output headings", {

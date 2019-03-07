@@ -41,7 +41,7 @@ bmi_summ <- dpaf_summary(
   predictors = ~ 0 + B_COHORT * F_PERIOD + SEX + BMI_2, 
   dpaf_data = bmi_data,
   modifications = list(BMI_2 = "<25.0"),
-  covar_model = c("SEX", "BMI_2")
+  hr_out = c("SEX", "BMI_2")
 )
 bmi_summ
 ```
@@ -96,13 +96,13 @@ bmi_fit1 <- est_matrix(
   survival::Surv(F_TIME, DIAB) ~ 0 + B_COHORT * F_PERIOD + SEX + BMI_2, 
   paf_response = bmi_data,
   modifications = list(BMI_2 = "<25.0"),
-  covar_model = c("SEX", "BMI_2")
+  hr_out = c("SEX", "BMI_2")
 )
 bmi_fit2 <- est_matrix(
   survival::Surv(F_TIME, DEATH) ~ 0 + B_COHORT * F_PERIOD + SEX + BMI_2, 
   paf_response = bmi_data,
   modifications = list(BMI_2 = "<25.0"),
-  covar_model = c("SEX", "BMI_2")
+  hr_out = c("SEX", "BMI_2")
 )
 ```
 One can also here specify the width of the confidence intervals for hazard ratio reporting, which is by default 95%.

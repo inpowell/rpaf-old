@@ -19,7 +19,7 @@ test_that("reference levels", {
   paf_fit <- est_matrix(
     survival::Surv(f_time, died) ~ 1 + tmt, paf_data,
     modifications = list(tmt = "Y"),
-    covar_model = c("tmt")
+    hr_out = c("tmt")
   )
   expect_equal(paf_fit$HR[,1], c("tmtN" = 1, "tmtY" = 0.5))
   expect_equal(is.na(paf_fit$HR[1,]), c(FALSE, TRUE, TRUE),

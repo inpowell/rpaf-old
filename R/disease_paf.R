@@ -3,7 +3,7 @@
 #'
 #'
 #'
-#' If \code{covar_model} is not specified, the "hazard ratios" reported include
+#' If \code{hr_out} is not specified, the "hazard ratios" reported include
 #' all first order terms.
 #'
 #' \code{modifications} should be a named list of scalars or vectors. Each name
@@ -28,7 +28,7 @@
 #' @return a list of potentially interesting hazard ratio and PAF estimates
 #' @export
 dpaf_summary <- function(primary_resp, secondary_resp, predictors, dpaf_data,
-                         modifications, covar_model, prevalence_data,
+                         modifications, hr_out, prevalence_data,
                          group_vars, level = 0.95, ...) {
   # construct survival regression formulae
   primary_fm <- stats::update(primary_resp, predictors)
@@ -36,9 +36,9 @@ dpaf_summary <- function(primary_resp, secondary_resp, predictors, dpaf_data,
 
   # fit disease and mortality models using est_matrix -- see
   # est_matrix.R
-  fit1 <- est_matrix(primary_fm, dpaf_data, modifications, covar_model,
+  fit1 <- est_matrix(primary_fm, dpaf_data, modifications, hr_out,
                       level = level, ...)
-  fit2 <- est_matrix(secondary_fm, dpaf_data, modifications, covar_model,
+  fit2 <- est_matrix(secondary_fm, dpaf_data, modifications, hr_out,
                       level = level, ...)
 
   vv_l <- list("primary" = fit1$var, "secondary" = fit2$var)

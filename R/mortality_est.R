@@ -8,9 +8,9 @@
 #'
 #' @export
 mpaf_est_matrix <- function(sr_formula, paf_data, modifications,
-                            covar_model, level = 0.95, ...) {
+                            hr_out, level = 0.95, ...) {
   .Deprecated("est_matrix")
-  est_matrix(sr_formula, paf_data, modifications, covar_model,
+  est_matrix(sr_formula, paf_data, modifications, hr_out,
              level = 0.95, ...)
 }
 
