@@ -15,7 +15,7 @@ gdata <- gen_data(
 test_that("single-period mortality dimensionality", {
   summary_2 <- mpaf_summary(
     survival::Surv(f_end, DEATH) ~ B_COHORT + SEX + BMI_2,
-    mpaf_data = gdata, modifications = list(BMI_2 = "<25.0"),
+    paf_data = gdata, modifications = list(BMI_2 = "<25.0"),
     covar_model = c("SEX", "BMI_2")
   )
 

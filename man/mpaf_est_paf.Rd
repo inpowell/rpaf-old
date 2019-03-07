@@ -4,12 +4,12 @@
 \alias{mpaf_est_paf}
 \title{Estimate mortality PAFs}
 \usage{
-mpaf_est_paf(mpaf_fit, mpaf_data, newdata, level = 0.95)
+mpaf_est_paf(mpaf_fit, paf_data, newdata, level = 0.95)
 }
 \arguments{
 \item{mpaf_fit}{an object of class \code{paf_est_matrix}}
 
-\item{mpaf_data}{an object of class \code{paf_data}, used for the
+\item{paf_data}{an object of class \code{paf_data}, used for the
 \code{\link{est_matrix}} call}
 
 \item{newdata}{new prevalences, as an object of class \code{paf_data}}

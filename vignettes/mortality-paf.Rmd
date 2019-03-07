@@ -37,7 +37,7 @@ smoke_data <- gen_data(
 )
 smoke_summ <- mpaf_summary(
   sr_formula = survival::Surv(F_TIME, DEATH) ~ 0 + B_COHORT * F_PERIOD + SEX + SMOKE, 
-  mpaf_data = smoke_data,
+  paf_data = smoke_data,
   modifications = list(SMOKE = c("Never", "<30/day", ">=30/day")),
   covar_model = c("SEX", "SMOKE")
 )
@@ -102,7 +102,7 @@ One can also here specify the width of the confidence intervals for hazard ratio
 This function takes our model fit by `est_matrix` and the original data and calculates the PAF we so desire. So, to find the same mortality PAFs as in our example above, we would call
 
 ```r
-smoke_paf <- mpaf_est_paf(mpaf_fit = smoke_fit, mpaf_data = smoke_data)
+smoke_paf <- mpaf_est_paf(mpaf_fit = smoke_fit, paf_data = smoke_data)
 ```
 
 Note that this function optionally takes a `newdata` argument, which is useful when we want to use a different prevalence matrix. This argument **is expanded upon in further detail in another vignette**^[Except not yet.]. One can also specify the confidence interval width again for the PAFs, though now it does not need to be the same as the hazard ratio level, as it would be in the case of using `mpaf_summary`.

@@ -4,13 +4,13 @@
 \alias{mpaf_est_matrix}
 \title{Calculations for mortality PAFs (deprecated)}
 \usage{
-mpaf_est_matrix(sr_formula, mpaf_data, modifications, covar_model,
+mpaf_est_matrix(sr_formula, paf_data, modifications, covar_model,
   level = 0.95, ...)
 }
 \arguments{
 \item{sr_formula}{a formula to be passed to \code{\link[survival]{survreg}}}
 
-\item{mpaf_data}{an object of class \code{mpaf_response} from
+\item{paf_data}{an object of class \code{mpaf_response} from
 \code{\link{gen_data}}}
 
 \item{modifications}{a list of modifications to apply for PAF calculation;

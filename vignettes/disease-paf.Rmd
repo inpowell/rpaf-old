@@ -113,7 +113,7 @@ This function takes our model fit by `est_matrix` and the original data and calc
 
 ```r
 bmi_paf <- dpaf_est_paf(fit1 = bmi_fit_1, fit2 = bmi_fit_2,
-                        mpaf_data = smoke_data)
+                        paf_data = smoke_data)
 ```
 
 Note that this function optionally takes a `newdata` argument, which is useful when we want to use a different prevalence matrix. This argument **is expanded upon in further detail in another vignette**^[Except not yet.]. One can also specify the confidence interval width again for the PAFs, though now it does not need to be the same as the hazard ratio level, as it would be in the case of using `dpaf_summary`.
