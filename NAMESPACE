@@ -3,6 +3,7 @@
 S3method(print,dpaf_summary)
 S3method(print,mpaf_summary)
 export(apply_modifications)
+export(collapse_times)
 export(dpaf_est_diff)
 export(dpaf_est_paf)
 export(dpaf_summary)
