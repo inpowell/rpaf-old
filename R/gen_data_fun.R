@@ -43,3 +43,40 @@ collapse_times <- function(indata, ind1, time1, ..., time.out = "time") {
     indata[, !names(indata) %in% times, drop = FALSE]
   )
 }
+
+#' Expand time-to-event data from multiple events
+#'
+#' This function converts an event factor from time-to-event data into multiple
+#' indicator columns. The indicator columns are \code{TRUE} if the corresponding
+#' event was recorded.
+#'
+#' @param indata data frame to be modified
+#' @param event column of factor describing the event that occurred
+#' @param prefix prefix to append to new column names
+#'
+#' @return a data frame with the original event column removed, and replaced
+#'   with an indicator column for each level of the event factor
+#' @export
+#'
+#' @examples
+#' # Our original data frame with liver transplant data has one
+#' # of four events occurring, stored in the "event" column.
+#' head(survival::transplant)
+#'
+#' # We want to convert the event column into multiple indicator
+#' # columns
+#' tsplt_ind <- expand_events(survival::transplant, "event")
+#' head(tsplt_ind)
+expand_events <- function(indata, event, prefix = paste0(event, ".")) {
+  lv <- levels(indata[[event]])
+  new_cols <- paste0(prefix, lv)
+
+  tf_event <- structure(lapply(lv, `==`, indata[[event]]),
+                        names = new_cols)
+  tf_cols <- do.call(cbind, tf_event)
+
+  cbind(
+    tf_cols,
+    indata[, !names(indata) == event, drop = FALSE]
+  )
+}

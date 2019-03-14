@@ -19,3 +19,20 @@ test_that("collapsing times from multiple events works", {
   expect_equal(rpaf::collapse_times(testdat, "ind1", "time1", "ind2", "time2"),
                expdat)
 })
+
+test_that("expanding event factor for multiple events works", {
+  testdat <- data.frame(
+    time = 1:12,
+    event = gl(4, 3, labels = letters[1:4])
+  )
+
+  expdat <- data.frame(
+    event.a = rep(c(FALSE, TRUE, FALSE), c(0, 3, 9)),
+    event.b = rep(c(FALSE, TRUE, FALSE), c(3, 3, 6)),
+    event.c = rep(c(FALSE, TRUE, FALSE), c(6, 3, 3)),
+    event.d = rep(c(FALSE, TRUE, FALSE), c(9, 3, 0)),
+    time = 1:12
+  )
+
+  expect_equal(rpaf::expand_events(testdat, "event"), expdat)
+})
