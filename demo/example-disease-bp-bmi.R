@@ -12,7 +12,7 @@ summary_bpxbmi <- dpaf_summary(
   ~ 0 + B_COHORT * f_period + SEX + BP + BP:BMI_2,
   dpaf_data = dpaf_bpxbmi,
   modifications = list(BMI_2 = "<25.0"),
-  covar_model = c("SEX", "BP", "BP:BMI_2"),
+  hr_out = c("SEX", "BP", "BP:BMI_2"),
   group_vars = "BP"
 )
 

@@ -4,12 +4,12 @@
 \alias{dpaf_est_paf}
 \title{Estimate disease PAFs}
 \usage{
-dpaf_est_paf(fit_d, fit_m, paf_data, newdata, level = 0.95)
+dpaf_est_paf(fit1, fit2, paf_data, newdata, level = 0.95)
 }
 \arguments{
-\item{fit_d}{the \code{est_matrix} object fitted to disease incidence}
+\item{fit1}{the \code{est_matrix} object fitted to primary outcome}
 
-\item{fit_m}{the \code{est_matrix} object fitted to mortality}
+\item{fit2}{the \code{est_matrix} object fitted to secondary outcome}
 
 \item{paf_data}{an object of class \code{paf_data}, used for the
 \code{\link{est_matrix}} call}

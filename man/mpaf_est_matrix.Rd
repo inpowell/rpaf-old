@@ -4,19 +4,19 @@
 \alias{mpaf_est_matrix}
 \title{Calculations for mortality PAFs (deprecated)}
 \usage{
-mpaf_est_matrix(sr_formula, mpaf_data, modifications, covar_model,
+mpaf_est_matrix(sr_formula, paf_data, modifications, hr_out,
   level = 0.95, ...)
 }
 \arguments{
 \item{sr_formula}{a formula to be passed to \code{\link[survival]{survreg}}}
 
-\item{mpaf_data}{an object of class \code{mpaf_response} from
+\item{paf_data}{an object of class \code{mpaf_response} from
 \code{\link{gen_data}}}
 
 \item{modifications}{a list of modifications to apply for PAF calculation;
 see Details for more information}
 
-\item{covar_model}{an optional character vector describing variables of
+\item{hr_out}{an optional character vector describing variables of
 interest for hazard ratio calculation}
 
 \item{level}{width of the confidence intervals for hazard ratios, default

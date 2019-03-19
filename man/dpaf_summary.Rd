@@ -5,16 +5,15 @@
 \title{Calculate mortality PAF estimates, confidence intervals and groupwise
 differences}
 \usage{
-dpaf_summary(disease_resp, death_resp, predictors, dpaf_data,
-  modifications, covar_model, prevalence_data, group_vars, level = 0.95,
-  ...)
+dpaf_summary(primary_resp, secondary_resp, predictors, dpaf_data,
+  modifications, hr_out, prevalence_data, group_vars, level = 0.95, ...)
 }
 \arguments{
-\item{disease_resp}{formula with response for disease regression (note RHS
+\item{primary_resp}{formula with response for primary outcome regression (note RHS
 should be \code{.})}
 
-\item{death_resp}{formula with response for mortality regression (note RHS
-should be \code{.})}
+\item{secondary_resp}{formula with response for secondary outcome regression
+(note RHS should be \code{.})}
 
 \item{predictors}{formula with RHS containing predictors for both survival
 regressions (LHS should be empty)}
@@ -25,7 +24,7 @@ regressions (LHS should be empty)}
 \item{modifications}{a list of modifications to apply for PAF calculation;
 see Details for more information}
 
-\item{covar_model}{an optional character vector describing variables of
+\item{hr_out}{an optional character vector describing variables of
 interest for hazard ratio calculation}
 
 \item{prevalence_data}{optional matrix of external prevalences as class
@@ -45,8 +44,8 @@ Calculate mortality PAF estimates, confidence intervals and groupwise
 differences
 }
 \details{
-If \code{covar_model} is not specified,
-the "hazard ratios" reported include all first order terms.
+If \code{hr_out} is not specified, the "hazard ratios" reported include
+all first order terms.
 
 \code{modifications} should be a named list of scalars or vectors. Each name
 should correspond to a column in \code{df}. The first element in each vector

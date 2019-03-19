@@ -88,17 +88,17 @@ print.dpaf_summary <- function(x, ..., coef_regex = "",
   }
   cat(vsep)
 
-  if (!is.null(x$survreg_d) || !is.null(x$survreg_m)) {
+  if (!is.null(x$survreg_1) || !is.null(x$survreg_2)) {
     cat("\nSurvival regression summary:\n")
 
-    if (!is.null(x$survreg_d)) {
+    if (!is.null(x$survreg_1)) {
       cat("\n    Disease:\n")
-      print(summary(x$survreg_d), digits = digits, ...)
+      print(summary(x$survreg_1), digits = digits, ...)
     }
 
-    if (!is.null(x$survreg_m)) {
+    if (!is.null(x$survreg_2)) {
       cat("\n    Mortality:\n")
-      print(summary(x$survreg_m), digits = digits, ...)
+      print(summary(x$survreg_2), digits = digits, ...)
     }
     cat(vsep)
   }
@@ -112,32 +112,32 @@ print.dpaf_summary <- function(x, ..., coef_regex = "",
     cat(vsep)
   }
 
-  if (!is.null(x$HR_d) || !is.null(x$HR_m)) {
+  if (!is.null(x$HR_1) || !is.null(x$HR_2)) {
     cat("\nHazard ratios:\n")
 
-    if (!is.null(x$HR_d)) {
+    if (!is.null(x$HR_1)) {
       cat("\n    Disease:\n")
-      print(x$HR_d, digits = digits, na.print = '--', ...)
+      print(x$HR_1, digits = digits, na.print = '--', ...)
     }
 
-    if (!is.null(x$HR_m)) {
+    if (!is.null(x$HR_2)) {
       cat("\n    Mortality:\n")
-      print(x$HR_m, digits = digits, na.print = '--', ...)
+      print(x$HR_2, digits = digits, na.print = '--', ...)
     }
 
     cat(vsep)
   }
 
-  if (!is.null(x$modifications_m)) {
+  if (!is.null(x$modifications_2)) {
     cat("\nModifications:\n")
-    lapply(X = seq_along(x$modifications_m), FUN = function(i, lst) {
+    lapply(X = seq_along(x$modifications_2), FUN = function(i, lst) {
       if (length(lst[[i]]) > 1)
         cat(names(lst)[i], ": ",  paste(lst[[i]][-1], collapse = ", "),
             " -> ", lst[[i]][1], "\n", sep = "")
       else
         cat(names(lst)[i], ": ", ".",
             " -> ", lst[[i]][1], "\n", sep = "")
-    }, lst = x$modifications_m)
+    }, lst = x$modifications_2)
     cat(vsep)
   }
 

@@ -3,15 +3,15 @@
 #' @param indata Original data frame containing data from cohort study
 #' @param id_var Name of column containing individual IDs
 #' @param ft_breaks Numeric vector of breaks between time periods
-#' @param death_ind (Optional) Name of logical column indicating if death
-#'   occurred before censoring (i.e. \code{TRUE} if an individual died before
-#'   the end of follow-up)
-#' @param death_time (Optional) Name of numerical column with individual time
-#'   until death or censoring
-#' @param disease_ind (Optional) Name of logical column indicating if disease
+#' @param primary_ind (Optional) Name of logical column indicating if primary
+#'   outcome of interest occurred before censoring (i.e. \code{TRUE} if an
+#'   individual died before the end of follow-up)
+#' @param primary_time (Optional) Name of numerical column with individual time
+#'   until primary outcome or censoring
+#' @param secondary_ind (Optional) Name of logical column indicating if secondary outcome
 #'   occurred before censoring
-#' @param disease_time (Optional) Name of numerical column with individual time
-#'   until disease or censoring
+#' @param secondary_time (Optional) Name of numerical column with individual time
+#'   until secondary outcome or censoring
 #' @param na.action Function (found via call to \code{match.fun}) which
 #'   indicates how this function should treat missing data
 #' @param variables Character vector of predictor columns to keep from
@@ -47,10 +47,10 @@ gen_data <- function(
   indata,
   id_var,
   ft_breaks,
-  death_ind,
-  death_time,
-  disease_ind,
-  disease_time,
+  primary_ind,
+  primary_time,
+  secondary_ind,
+  secondary_time,
   variables = character(0),
   na.action = getOption("na.action"),
   period_factor = "f_period",
@@ -66,10 +66,10 @@ gen_data <- function(
 
   # check to see if we have enough information for a disease PAF (1st case), a
   # mortality PAF (2nd case) or just predictors (3rd case)
-  if (!missing(death_time) && !missing(death_ind) &&
-      !missing(disease_time) && !missing(disease_ind))
+  if (!missing(primary_time) && !missing(primary_ind) &&
+      !missing(secondary_time) && !missing(secondary_ind))
     type <- c("paf_data", "dpaf_response")
-  else if (!missing(death_time) && !missing(death_ind))
+  else if (!missing(primary_time) && !missing(primary_ind))
     type <- c("paf_data", "mpaf_response")
   else
     type <- c("paf_data")
@@ -77,10 +77,10 @@ gen_data <- function(
   # select columns we want to keep from the data frame, which depends on the
   # information we have
   if ("dpaf_response" %in% type)
-    df <- indata[,c(id_var, variables, death_time, death_ind,
-                    disease_time, disease_ind)]
+    df <- indata[,c(id_var, variables, primary_time, primary_ind,
+                    secondary_time, secondary_ind)]
   else if ("mpaf_response" %in% type)
-    df <- indata[,c(id_var, variables, death_time, death_ind)]
+    df <- indata[,c(id_var, variables, primary_time, primary_ind)]
   else
     df <- indata[,c(id_var, variables), drop = FALSE]
 
@@ -103,18 +103,18 @@ gen_data <- function(
   ldf <- merge(intervals, df, by = NULL)
 
   if ("mpaf_response" %in% type) {
-    # move death_time column to the new time_var column
-    ldf[[time_var]] <- ldf[[death_time]]
+    # move primary_time column to the new time_var column
+    ldf[[time_var]] <- ldf[[primary_time]]
 
-    # figure out which interval death (or censoring!) lies in
+    # figure out which interval outcome (or censoring!) lies in
     ft_intervals <- findInterval(ldf[[time_var]], ft_breaks)
 
     # "partial time" to event is undefined after event has happened -- set to
     # missing in this case
-    ldf[ldf[[period_factor]] > ft_intervals, c(time_var, death_ind)] <- NA
+    ldf[ldf[[period_factor]] > ft_intervals, c(time_var, primary_ind)] <- NA
 
-    # before event, death  hasn't happened
-    ldf[ldf[[period_factor]] < ft_intervals, death_ind] <- FALSE
+    # before event, outcome hasn't happened
+    ldf[ldf[[period_factor]] < ft_intervals, primary_ind] <- FALSE
 
     # "partial times" if no event has happened is defined as the length of the
     # period
@@ -128,12 +128,12 @@ gen_data <- function(
       subset(ldf[[time_var]] - ft_breaks[ft_intervals],
              ft_intervals == ldf[[period_factor]])
 
-    # remove original death_time column from the data frame
-    ldf <- subset(ldf, select = setdiff(names(ldf), death_time))
+    # remove original primary_time column from the data frame
+    ldf <- subset(ldf, select = setdiff(names(ldf), primary_time))
   }
   if ("dpaf_response" %in% type) {
     # the time until censoring is the minimum time until event
-    ldf[[time_var]] <- pmin(ldf[[death_time]], ldf[[disease_time]])
+    ldf[[time_var]] <- pmin(ldf[[secondary_time]], ldf[[primary_time]])
 
     # note that breaks[data[[period_factor]]] gives the time at start of period
     # and breaks[-1][data[[period_factor]]] gives time at end of period
@@ -142,12 +142,12 @@ gen_data <- function(
     pre_end <- ft_intervals > ldf[[period_factor]]
     is_end <- ft_intervals == ldf[[period_factor]]
 
-    ldf[[death_ind]][post_end] <- ldf[[disease_ind]][post_end] <- NA
-    ldf[[death_ind]][pre_end] <- ldf[[disease_ind]][pre_end] <- FALSE
-    ldf[[death_ind]][is_end] <- ldf[[death_ind]][is_end] &
-      ldf[[death_time]][is_end] <= ldf[[disease_time]][is_end]
-    ldf[[disease_ind]][is_end] <- ldf[[disease_ind]][is_end] &
-      ldf[[disease_time]][is_end] <= ldf[[death_time]][is_end]
+    ldf[[secondary_ind]][post_end] <- ldf[[primary_ind]][post_end] <- NA
+    ldf[[secondary_ind]][pre_end] <- ldf[[primary_ind]][pre_end] <- FALSE
+    ldf[[secondary_ind]][is_end] <- ldf[[secondary_ind]][is_end] &
+      ldf[[secondary_time]][is_end] <= ldf[[primary_time]][is_end]
+    ldf[[primary_ind]][is_end] <- ldf[[primary_ind]][is_end] &
+      ldf[[primary_time]][is_end] <= ldf[[secondary_time]][is_end]
 
     # adjust times:
     #  - after event, partial time is undefined
@@ -180,7 +180,7 @@ gen_data <- function(
 
 #' @export
 #' @rdname gen_data
-mpaf_gen_data <- function(indata, id_var, ft_breaks, death_ind, death_time,
+mpaf_gen_data <- function(indata, id_var, ft_breaks, primary_ind, primary_time,
               variables = character(0), na.action = getOption("na.action"),
               period_factor = "f_period", time_var = "f_end") {
   .Deprecated("gen_data")
@@ -188,8 +188,8 @@ mpaf_gen_data <- function(indata, id_var, ft_breaks, death_ind, death_time,
     indata = indata,
     id_var = id_var,
     ft_breaks = ft_breaks,
-    death_ind = death_ind,
-    death_time = death_time,
+    primary_ind = primary_ind,
+    primary_time = primary_time,
     variables = variables,
     na.action = na.action,
     period_factor = period_factor,

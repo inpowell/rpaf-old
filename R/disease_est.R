@@ -1,7 +1,7 @@
 #' Estimate disease PAFs
 #'
-#' @param fit_d the \code{est_matrix} object fitted to disease incidence
-#' @param fit_m the \code{est_matrix} object fitted to mortality
+#' @param fit1 the \code{est_matrix} object fitted to primary outcome
+#' @param fit2 the \code{est_matrix} object fitted to secondary outcome
 #' @param paf_data an object of class \code{paf_data}, used for the
 #'   \code{\link{est_matrix}} call
 #' @param newdata new prevalences, as an object of class \code{paf_data}
@@ -20,7 +20,7 @@
 #'   difference calculations}
 #'
 #' @export
-dpaf_est_paf <- function(fit_d, fit_m, paf_data, newdata, level = 0.95) {
+dpaf_est_paf <- function(fit1, fit2, paf_data, newdata, level = 0.95) {
   if (!missing(newdata)) {
     # equivalence assertions
     stopifnot(inherits(newdata, "paf_data"))
@@ -48,34 +48,34 @@ dpaf_est_paf <- function(fit_d, fit_m, paf_data, newdata, level = 0.95) {
   ## TODO TEST this -- the correct answer may occur even if the
   ## following conditions don't hold (below is sufficient, but not
   ## necessary)
-  stopifnot(isTRUE(all.equal(fit_d$terms, fit_m$terms)))
-  stopifnot(identical(fit_d$design, fit_m$design))
-  stopifnot(identical(fit_d$modified, fit_m$modified))
-  stopifnot(identical(fit_d$modifications, fit_m$modifications))
+  stopifnot(isTRUE(all.equal(fit1$terms, fit2$terms)))
+  stopifnot(identical(fit1$design, fit2$design))
+  stopifnot(identical(fit1$modified, fit2$modified))
+  stopifnot(identical(fit1$modifications, fit2$modifications))
 
   # convenience variables
-  tm <- fit_d$terms
-  cf_l <- list("disease" = fit_d$coefficients,
-               "mortality" = fit_m$coefficients)
-  vv_l <- list("disease" = fit_d$var,
-               "mortality" = fit_m$var)
+  tm <- fit1$terms
+  cf_l <- list("primary" = fit1$coefficients,
+               "secondary" = fit2$coefficients)
+  vv_l <- list("primary" = fit1$var,
+               "secondary" = fit2$var)
   dt <- diff(paf_data$breaks)
 
   # Point estimate calculations ---------------------------------------------
 
   if (missing(newdata)) {
-    z <-      stats::model.matrix(tm, fit_m$design)
-    z_star <- stats::model.matrix(tm, fit_m$modified)
+    z <-      stats::model.matrix(tm, fit2$design)
+    z_star <- stats::model.matrix(tm, fit2$modified)
   } else {
-    newframes <- design_frames(newdata$data, tm, fit_m$modifications,
-                               fit_m$survreg$xlevels)
+    newframes <- design_frames(newdata$data, tm, fit2$modifications,
+                               fit2$survreg$xlevels)
     z <-      stats::model.matrix(tm, newframes$design)
     z_star <- stats::model.matrix(tm, newframes$modified)
   }
 
   # see R/disease_calc.R for source code on the following calculation
   # functions
-  
+
   lambda <-      dpaf_lambda(z,      cf_l)
   lambda_star <- dpaf_lambda(z_star, cf_l)
 
@@ -110,7 +110,7 @@ dpaf_est_paf <- function(fit_d, fit_m, paf_data, newdata, level = 0.95) {
 
   # see R/disease_calc.R again for source code on the following
   # calculation functions
-  
+
   grad_lambda <-      dpaf_grad_lambda(z,      lambda)
   grad_lambda_star <- dpaf_grad_lambda(z_star, lambda_star)
 

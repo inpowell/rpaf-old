@@ -2,22 +2,22 @@
 #'
 #' This function is deprecated, see \code{\link{est_matrix}} for current usage.
 #'
-#' @param mpaf_data an object of class \code{mpaf_response} from
+#' @param paf_data an object of class \code{mpaf_response} from
 #'   \code{\link{gen_data}}
 #' @inheritParams est_matrix
 #'
 #' @export
-mpaf_est_matrix <- function(sr_formula, mpaf_data, modifications,
-                            covar_model, level = 0.95, ...) {
+mpaf_est_matrix <- function(sr_formula, paf_data, modifications,
+                            hr_out, level = 0.95, ...) {
   .Deprecated("est_matrix")
-  est_matrix(sr_formula, mpaf_data, modifications, covar_model,
+  est_matrix(sr_formula, paf_data, modifications, hr_out,
              level = 0.95, ...)
 }
 
 #' Estimate mortality PAFs
 #'
 #' @param mpaf_fit an object of class \code{paf_est_matrix}
-#' @param mpaf_data an object of class \code{paf_data}, used for the
+#' @param paf_data an object of class \code{paf_data}, used for the
 #'   \code{\link{est_matrix}} call
 #' @param newdata new prevalences, as an object of class \code{paf_data}
 #' @param level width of confidence interval, default 0.95
@@ -35,15 +35,15 @@ mpaf_est_matrix <- function(sr_formula, mpaf_data, modifications,
 #'   difference calculations}
 #'
 #' @export
-mpaf_est_paf <- function(mpaf_fit, mpaf_data, newdata, level = 0.95) {
+mpaf_est_paf <- function(mpaf_fit, paf_data, newdata, level = 0.95) {
   if (!missing(newdata)) {
     # equivalence assertions
     stopifnot(inherits(newdata, "paf_data"))
-    if (!identical(mpaf_data$data_call$ft_breaks, newdata$data_call$ft_breaks))
+    if (!identical(paf_data$data_call$ft_breaks, newdata$data_call$ft_breaks))
       stop("Original periods and new periods are incompatible")
-    if (!identical(mpaf_data$data_call$variables, newdata$data_call$variables))
+    if (!identical(paf_data$data_call$variables, newdata$data_call$variables))
       stop("Original variables and new variables are different")
-    if (!identical(mpaf_data$data_call$period_factor,
+    if (!identical(paf_data$data_call$period_factor,
                    newdata$data_call$period_factor))
       stop(paste("Name of period factor columns are not equal.",
                  "Ensure mpaf_gen_data is called with identical",
@@ -53,8 +53,8 @@ mpaf_est_paf <- function(mpaf_fit, mpaf_data, newdata, level = 0.95) {
     PERIOD <- newdata$PERIOD
   } else {
     # setting ID and PERIOD
-    ID <- mpaf_data$ID
-    PERIOD <- mpaf_data$PERIOD
+    ID <- paf_data$ID
+    PERIOD <- paf_data$PERIOD
   }
   if (is_period_unsorted(ID, PERIOD))
     stop("Periods must be in ascending order by ID for PAF calculations")
@@ -63,7 +63,7 @@ mpaf_est_paf <- function(mpaf_fit, mpaf_data, newdata, level = 0.95) {
   tm <- mpaf_fit$terms
   cf <- mpaf_fit$coefficients
   vv <- mpaf_fit$var
-  dt <- diff(mpaf_data$breaks)
+  dt <- diff(paf_data$breaks)
 
   # Point estimate calculations ---------------------------------------------
 
@@ -93,7 +93,7 @@ mpaf_est_paf <- function(mpaf_fit, mpaf_data, newdata, level = 0.95) {
   I_0_star <- mpaf_I(1-S_star, PERIOD)
   if (length(levels(PERIOD)) > 1)
     names(I_0) <- names(I_0_star) <- paste0(
-      "(", mpaf_data$breaks[1], ",", utils::tail(mpaf_data$breaks, -1), "]"
+      "(", paf_data$breaks[1], ",", utils::tail(paf_data$breaks, -1), "]"
     )
 
   # I_(t, t+dt]^(*)
@@ -131,7 +131,7 @@ mpaf_est_paf <- function(mpaf_fit, mpaf_data, newdata, level = 0.95) {
   }
 
   dimnames(grad_I_0)[[1]] <- dimnames(grad_I_0_star)[[1]] <- paste0(
-    "(", mpaf_data$breaks[1], ",", utils::tail(mpaf_data$breaks, -1), "]"
+    "(", paf_data$breaks[1], ",", utils::tail(paf_data$breaks, -1), "]"
   )
 
   grad_ipaf0 <- grad_I_0_star / I_0_star - grad_I_0 / I_0

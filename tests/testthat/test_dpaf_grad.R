@@ -21,35 +21,35 @@ test_that("hazard and survival gradients", {
   ID <- gl(4, 2)
   PERIOD <- gl(2, 1, 8)
   breaks = 0:2
-  hz_d <- c(1,2,1,2,4,5,4,5)
-  hz_m <- c(2,3,2,3,6,7,6,7)
-  lambda <- list(disease = hz_d, mortality = hz_m)
+  hz_1 <- c(1,2,1,2,4,5,4,5)
+  hz_2 <- c(2,3,2,3,6,7,6,7)
+  lambda <- list("primary" = hz_1, "secondary" = hz_2)
 
-  sv_d <- exp(-hz_d)
-  sv_m <- exp(-hz_m)
-  S <- list(disease = sv_d, mortality = sv_m)
+  sv_1 <- exp(-hz_1)
+  sv_2 <- exp(-hz_2)
+  S <- list("primary" = sv_1, "secondary" = sv_2)
 
-  # grad <- dpaf_grad(z, hz_d, hz_m, sv_d, sv_m, breaks, ID, PERIOD)
+  # grad <- dpaf_grad(z, hz_1, hz_2, sv_1, sv_2, breaks, ID, PERIOD)
 
   # expected values
-  e_glambda_d <- matrix(c(1,0,0, 0,2,0, 1,0,0, 0,2,0, 4,0,4, 0,5,5, 4,0,4, 0,5,5),
+  e_glambda_1 <- matrix(c(1,0,0, 0,2,0, 1,0,0, 0,2,0, 4,0,4, 0,5,5, 4,0,4, 0,5,5),
                         ncol = 3, byrow = TRUE)
-  e_glambda_m <- matrix(c(2,0,0, 0,3,0, 2,0,0, 0,3,0, 6,0,6, 0,7,7, 6,0,6, 0,7,7),
+  e_glambda_2 <- matrix(c(2,0,0, 0,3,0, 2,0,0, 0,3,0, 6,0,6, 0,7,7, 6,0,6, 0,7,7),
                    ncol = 3, byrow = TRUE)
-  ecs_ghz_d <- matrix(c(1,0,0, 1,2,0, 1,0,0, 1,2,0,
+  ecs_ghz_1 <- matrix(c(1,0,0, 1,2,0, 1,0,0, 1,2,0,
                         4,0,4, 4,5,9, 4,0,4, 4,5,9),
                       ncol = 3, byrow = TRUE)
-  ecs_ghz_m <- matrix(c(2,0,0, 2,3,0, 2,0,0, 2,3,0,
+  ecs_ghz_2 <- matrix(c(2,0,0, 2,3,0, 2,0,0, 2,3,0,
                         6,0,6, 6,7,13, 6,0,6, 6,7,13),
                       ncol = 3, byrow = TRUE)
-  e_gS_d <- -exp(-hz_d) * ecs_ghz_d
-  e_gS_m <- -exp(-hz_m) * ecs_ghz_m
+  e_gS_1 <- -exp(-hz_1) * ecs_ghz_1
+  e_gS_2 <- -exp(-hz_2) * ecs_ghz_2
 
   glambda <- rpaf:::dpaf_grad_lambda(z, lambda)
-  expect_equal(glambda, list(disease = e_glambda_d, mortality = e_glambda_m))
+  expect_equal(glambda, list("primary" = e_glambda_1, "secondary" = e_glambda_2))
 
   gS <- rpaf:::dpaf_grad_S(glambda, S, ID, PERIOD, diff(breaks))
-  expect_equal(gS, list(disease = e_gS_d, mortality = e_gS_m))
+  expect_equal(gS, list("primary" = e_gS_1, "secondary" = e_gS_2))
 })
 
 test_that("morbidity gradients", {
@@ -58,19 +58,19 @@ test_that("morbidity gradients", {
   period <- gl(3, 1)
   dt <- c(1,1,1)
 
-  S <- list(disease = c(0.95, 0.85, 0.70), mortality = c(0.99, 0.95, 0.90))
-  lambda <- list(disease = log(c(1/0.95, 0.95/0.85, 0.85/0.70)),
-                 mortality = log(c(1/0.99, 0.99/0.95, 0.95/0.90)))
+  S <- list("primary" = c(0.95, 0.85, 0.70), "secondary" = c(0.99, 0.95, 0.90))
+  lambda <- list("primary" = log(c(1/0.95, 0.95/0.85, 0.85/0.70)),
+                 "secondary" = log(c(1/0.99, 0.99/0.95, 0.95/0.90)))
 
   stopifnot(all.equal(S, rpaf:::dpaf_S(lambda, id, period, dt)))
 
-  glambda <- list(disease = diag(lambda$disease),
-                  mortality = diag(lambda$mortality))
+  glambda <- list("primary" = diag(lambda$primary),
+                  "secondary" = diag(lambda$secondary))
 
   stopifnot(all.equal(glambda, rpaf:::dpaf_grad_lambda(z, lambda)))
 
-  gS <- list(disease = -S$disease %o% lambda$disease,
-             mortality = -S$mortality %o% lambda$mortality)
+  gS <- list("primary" = -S$primary %o% lambda$primary,
+             "secondary" = -S$secondary %o% lambda$secondary)
   gS <- lapply(gS, function(mat) {mat[upper.tri(mat)] <- 0; mat})
 
   stopifnot(all.equal(gS, rpaf:::dpaf_grad_S(glambda, S, id, period, dt)))
@@ -78,24 +78,24 @@ test_that("morbidity gradients", {
   # product of survivals
   Sp <- c(0.9405, 0.8075, 0.6300)
 
-  Sp_gS_d <- (Sp * S[["disease"]]) %o% (-lambda[["disease"]])
-  Sp_gS_d[upper.tri(Sp_gS_d)] <- 0
-  Sp_gS_m <- (Sp * S[["mortality"]]) %o% (-lambda[["mortality"]])
-  Sp_gS_m[upper.tri(Sp_gS_m)] <- 0
+  Sp_gS_1 <- (Sp * S[["primary"]]) %o% (-lambda[["primary"]])
+  Sp_gS_1[upper.tri(Sp_gS_1)] <- 0
+  Sp_gS_2 <- (Sp * S[["secondary"]]) %o% (-lambda[["secondary"]])
+  Sp_gS_2[upper.tri(Sp_gS_2)] <- 0
 
   dSp <- -diff(c(1, Sp))
-  dSp_gS_d <- apply(Sp_gS_d, 2, function(col) -diff(c(0, col)))
-  dSp_gS_m <- apply(Sp_gS_m, 2, function(col) -diff(c(0, col)))
-  grad_dSp <- list(disease = dSp_gS_d, mortality = dSp_gS_m)
+  dSp_gS_1 <- apply(Sp_gS_1, 2, function(col) -diff(c(0, col)))
+  dSp_gS_2 <- apply(Sp_gS_2, 2, function(col) -diff(c(0, col)))
+  grad_dSp <- list("primary" = dSp_gS_1, "secondary" = dSp_gS_2)
 
-  dis_prob <- lambda[["disease"]] / do.call(`+`, lambda)
+  dis_prob <- lambda[["primary"]] / do.call(`+`, lambda)
 
-  gdis_prob_d <- lambda[["mortality"]] / do.call(`+`, lambda)**2 * glambda$disease
-  gdis_prob_m <- -lambda[["disease"]] / do.call(`+`, lambda)**2 * glambda$mortality
+  gdis_prob_1 <- lambda[["secondary"]] / do.call(`+`, lambda)**2 * glambda$primary
+  gdis_prob_2 <- -lambda[["primary"]] / do.call(`+`, lambda)**2 * glambda$secondary
 
   smnd <- list(
-    disease = gdis_prob_d * dSp + dis_prob * dSp_gS_d,
-    mortality = gdis_prob_m * dSp + dis_prob * dSp_gS_m
+    "primary" = gdis_prob_1 * dSp + dis_prob * dSp_gS_1,
+    "secondary" = gdis_prob_2 * dSp + dis_prob * dSp_gS_2
   )
   rpaf:::dpaf_grad_I(glambda, grad_dSp, lambda, dSp, period)
   expect_equal(rpaf:::dpaf_grad_I(glambda, grad_dSp, lambda, dSp, period),

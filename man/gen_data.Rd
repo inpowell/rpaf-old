@@ -5,12 +5,12 @@
 \alias{mpaf_gen_data}
 \title{Generate mortality PAF data from cohort data.}
 \usage{
-gen_data(indata, id_var, ft_breaks, death_ind, death_time, disease_ind,
-  disease_time, variables = character(0),
+gen_data(indata, id_var, ft_breaks, primary_ind, primary_time,
+  secondary_ind, secondary_time, variables = character(0),
   na.action = getOption("na.action"), period_factor = "f_period",
   time_var = "f_end")
 
-mpaf_gen_data(indata, id_var, ft_breaks, death_ind, death_time,
+mpaf_gen_data(indata, id_var, ft_breaks, primary_ind, primary_time,
   variables = character(0), na.action = getOption("na.action"),
   period_factor = "f_period", time_var = "f_end")
 }
@@ -21,18 +21,18 @@ mpaf_gen_data(indata, id_var, ft_breaks, death_ind, death_time,
 
 \item{ft_breaks}{Numeric vector of breaks between time periods}
 
-\item{death_ind}{(Optional) Name of logical column indicating if death
-occurred before censoring (i.e. \code{TRUE} if an individual died before
-the end of follow-up)}
+\item{primary_ind}{(Optional) Name of logical column indicating if primary
+outcome of interest occurred before censoring (i.e. \code{TRUE} if an
+individual died before the end of follow-up)}
 
-\item{death_time}{(Optional) Name of numerical column with individual time
-until death or censoring}
+\item{primary_time}{(Optional) Name of numerical column with individual time
+until primary outcome or censoring}
 
-\item{disease_ind}{(Optional) Name of logical column indicating if disease
+\item{secondary_ind}{(Optional) Name of logical column indicating if secondary outcome
 occurred before censoring}
 
-\item{disease_time}{(Optional) Name of numerical column with individual time
-until disease or censoring}
+\item{secondary_time}{(Optional) Name of numerical column with individual time
+until secondary outcome or censoring}
 
 \item{variables}{Character vector of predictor columns to keep from
 \code{indata}}

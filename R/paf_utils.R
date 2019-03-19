@@ -107,7 +107,7 @@ design_frames <- function(df, terms, modifications, xlev) {
 #' @param fsep character separator between two factors
 #'
 #' @return A named list of objects with class \code{dpaf_data} or
-#'   \code{mpaf_data}, with names corresponding to the names of the list output
+#'   \code{paf_data}, with names corresponding to the names of the list output
 #'   by \code{split}. If a named list was given in \code{INDICES}, then these
 #'   names will be included.
 #' @export
