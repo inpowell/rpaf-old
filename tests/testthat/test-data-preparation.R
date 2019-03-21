@@ -36,3 +36,17 @@ test_that("expanding event factor for multiple events works", {
 
   expect_equal(rpaf::expand_events(testdat, "event"), expdat)
 })
+
+test_that("removing rows from paf_data keeps attributes", {
+  testdat <- minifhs[511:520, ] # row 518 has NA in SMOKE column
+  coldat <- collapse_times(testdat, "DEATH", "DEATH_FT", "DIAB", "DIAB_FT")
+  extdat <- gen_data_fun(coldat, c(0, 5, 10, 15, 17),
+                         time = "time", primary = "DIAB", secondary = "DEATH",
+                         id_col = "ID")
+  rmdat <- extdat[complete.cases(extdat), ]
+
+  # ignore row names
+  attr(extdat, "row.names") <- attr(rmdat, "row.names") <- NULL
+
+  expect_true(is.null(attr.all.equal(extdat, rmdat))) # NULL indicates correct result
+})

@@ -78,6 +78,28 @@ gen_data_fun <- function(indata, ft_breaks, time,
   )
 }
 
+#' @export
+`[.paf_data` <- function(x, i, ...) {
+  subs <- NextMethod()
+  if (is.data.frame(subs)) {
+    # keep attributes, so long as corresponding columns remain
+    attx <- attributes(x)
+    structure(
+      .Data = subs,
+      class = class(x),
+      ft_breaks = attx$ft_breaks,
+      primary = intersect(attx$primary, names(subs)),
+      secondary = intersect(attx$secondary, names(subs)),
+      time = intersect(attx$time, names(subs)),
+      period = intersect(attx$period, names(subs)),
+      id = intersect(attx$id, names(subs))
+    )
+  } else {
+    # it's a vector
+    subs
+  }
+}
+
 #' Collapse time-to-event data from multiple events
 #'
 #' This function converts multiple time-to-event columns into one time column,
