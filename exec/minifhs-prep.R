@@ -11,3 +11,7 @@ head(ct_minifhs)
 ext_minifhs <- gen_data_fun(ct_minifhs, c(0,5,10,15,17), time = "time",
                             primary = "DIAB", secondary = "DEATH",
                             id_col = "ID")
+
+# Fit survival regression models for every event, and then summarise
+mods_minifhs <- fit_models(~ B_COHORT * period + SEX + BMI_2, ext_minifhs)
+mods_minifhs
