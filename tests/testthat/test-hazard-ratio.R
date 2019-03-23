@@ -2,16 +2,25 @@ context("test-hazard-ratio")
 
 library(testthat)
 
-df <- data.frame(
+easy_dat <- data.frame(
   tmt = gl(2, 1, labels = c("N", "Y")),
   died = c(TRUE, TRUE),
   time = c(1.0, 2.0),
   id = 1:2
 )
 
+int_dat <- data.frame(
+  tmt = gl(2, 1, 8, labels = c("N", "Y")),
+  blk = gl(2, 2, 8, labels = c("A", "B")),
+  died = rep(TRUE, 4),
+  time = c(1.0, 2.0, 3.0, 4.0, 2.0, 3.0, 4.0, 5.0),
+  id = 1:8
+)
+
 test_that("hazard ratio reported correctly", {
   #  expect_true(FALSE && "TODO")
-  sr <- survival::survreg(survival::Surv(time, died) ~ tmt + 1, data = df, dist = "exp")
+  sr <- survival::survreg(survival::Surv(time, died) ~ tmt + 1,
+                          data = easy_dat, dist = "exp")
   hr <- rpaf::hazard_ratios(sr, "tmt")
   expect_equal(
     hr$tmt[[1]],
@@ -20,4 +29,13 @@ test_that("hazard ratio reported correctly", {
   )
   expect_equal(names(hr), c("tmt"))
   expect_equal(dimnames(hr$tmt), list(ALL = ""))
+})
+
+test_that("interactions give correct row names of hazard ratios", {
+  sr <- survival::survreg(survival::Surv(time, died) ~ tmt * blk + 1,
+                          data = int_dat, dist = "exp")
+  hr <- rpaf::hazard_ratios(sr, "tmt")
+  # expect_equal(names(hr), c("tmt"))
+  expect_equal(dimnames(hr$tmt), list(blk = c("A", "B")))
+  expect_equal(rownames(hr$tmt[[1]]), c("N", "Y"))
 })

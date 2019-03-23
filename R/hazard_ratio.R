@@ -67,14 +67,14 @@ hazard_ratios <- function(survreg, hr_out, level = 0.95) {
       gf <- data.frame(ALL = gl(1, nrow(gf), labels = ""))
 
     # row names of the hazard ratio table
-    rownames(mm) <- if (label %in% names(survreg$xlevels))
+    rn <- if (label %in% names(survreg$xlevels))
       survreg$xlevels[[label]]
     else
       c("Base", "Unit increase")
 
     # calculate hazard ratios for each group
     by(as.data.frame(mm), INDICES = gf, FUN = hr_group,
-       cf = cf, vv = vv, level = level, simplify = FALSE)
+       cf = cf, vv = vv, rn = rn, level = level, simplify = FALSE)
   })
   names(hr_list) <- hr_out
 
@@ -86,10 +86,11 @@ hazard_ratios <- function(survreg, hr_out, level = 0.95) {
 #' @param mm model matrix fragment of interest
 #' @param cf coefficient vector of survival regression object
 #' @param vv variance matrix from survival regression object
+#' @param rn rownames of output matrix
 #' @param level confidence level desired
 #'
 #' @return matrix of hazard ratios and confidence intervals
-hr_group <- function(mm, cf, vv, level) {
+hr_group <- function(mm, cf, vv, rn, level) {
   # `by` coerces model matrix to a data frame
   mm <- as.matrix(mm)
 
@@ -106,6 +107,7 @@ hr_group <- function(mm, cf, vv, level) {
   colnames(hr) <- c("Point", paste(
     format(100*rev(a), trim = TRUE, scientific = FALSE, digits = 3), "%"
   ))
+  rownames(hr) <- rn
 
   # true hazard ratios
   exp(-hr)

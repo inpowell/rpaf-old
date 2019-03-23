@@ -4,7 +4,7 @@
 \alias{hr_group}
 \title{Calculate hazard ratios within a particular group}
 \usage{
-hr_group(mm, cf, vv, level)
+hr_group(mm, cf, vv, rn, level)
 }
 \arguments{
 \item{mm}{model matrix fragment of interest}
@@ -12,6 +12,8 @@ hr_group(mm, cf, vv, level)
 \item{cf}{coefficient vector of survival regression object}
 
 \item{vv}{variance matrix from survival regression object}
+
+\item{rn}{rownames of output matrix}
 
 \item{level}{confidence level desired}
 }
