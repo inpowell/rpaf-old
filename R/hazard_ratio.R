@@ -47,16 +47,15 @@ hazard_ratios <- function(survreg, hr_out, level = 0.95) {
     vars <- rownames(ttf)[fr]
 
     # corresponding columns in the model matrix
-    fc <- apply(ttf[fr, AA, drop = FALSE] > 0, 2, any)
+    mmc <- ttf[label, AA, drop = FALSE] > 0
 
     # account for possible intercept term
     if (AA[1] == 0)
-      fc <- c(FALSE, fc)
+      mmc <- c(FALSE, mmc)
 
     # remove duplicate rows
-    mm <- sweep(MM, MARGIN = 2, fc, `*`)
-    dup <- duplicated(mm)
-    mm <- mm[!dup, ]
+    dup <- duplicated(comb.dat[,vars])
+    mm <- sweep(MM[!dup,], MARGIN = 2, mmc, `*`)
 
     # want to determine sensible groups to calculate hazard ratios
     gf <- comb.dat[!dup, setdiff(vars, label), drop = FALSE]
